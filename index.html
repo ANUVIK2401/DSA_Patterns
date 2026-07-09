@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>DSA Patterns — Interview Prep Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117; --bg-2: #161b22; --bg-3: #1c2230; --line: #2a3441;
+    --txt: #e6edf3; --txt-2: #9aa7b4; --txt-3: #6e7b8a;
+    --accent: #58a6ff; --accent-2: #7c5cff;
+    --easy: #3fb950; --med: #d29922; --hard: #f85149;
+    --p1: #f85149; --p2: #d29922; --p3: #3fb950;
+    --ok: #3fb950;
+    --r: 10px; --tap: 44px;
+    --sidebar-w: 300px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--txt); }
+  body { -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  button { font: inherit; cursor: pointer; color: inherit; background: none; border: none; }
+
+  /* Layout */
+  .app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0; background: var(--bg-2);
+    border-right: 1px solid var(--line); position: sticky; top: 0;
+    height: 100vh; overflow-y: auto; padding: 18px 14px;
+  }
+  .main { flex: 1; min-width: 0; padding: 18px clamp(14px, 3vw, 32px) 80px; }
+
+  /* Sidebar header + stats */
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .brand h1 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .brand .dot { width: 12px; height: 12px; border-radius: 3px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+  .tagline { color: var(--txt-3); font-size: 11px; margin-bottom: 16px; }
+
+  .stats { background: var(--bg-3); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 14px; margin-bottom: 16px; }
+  .stats .big { font-size: 26px; font-weight: 800; letter-spacing: -.5px; }
+  .stats .big span { color: var(--txt-3); font-size: 15px; font-weight: 600; }
+  .stats .pct { color: var(--accent); font-size: 13px; font-weight: 600; margin-top: 2px; }
+  .bar { height: 7px; background: var(--bg); border-radius: 4px; overflow: hidden; margin: 10px 0; }
+  .bar > i { display: block; height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    transition: width .35s ease; }
+  .diffcounts { display: flex; gap: 12px; font-size: 11px; color: var(--txt-2); }
+  .diffcounts b { color: var(--txt); font-weight: 600; }
+  .swatch { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+
+  /* Pattern nav */
+  .navlist { display: flex; flex-direction: column; gap: 2px; }
+  .navitem { display: block; padding: 8px 10px; border-radius: 8px; color: var(--txt-2);
+    font-size: 13px; min-height: var(--tap); }
+  .navitem:hover { background: var(--bg-3); color: var(--txt); text-decoration: none; }
+  .navitem .row1 { display: flex; align-items: center; gap: 7px; }
+  .navitem .num { color: var(--txt-3); font-size: 11px; font-variant-numeric: tabular-nums; min-width: 18px; }
+  .navitem .nm { flex: 1; font-weight: 500; }
+  .navitem .cnt { font-size: 11px; color: var(--txt-3); font-variant-numeric: tabular-nums; }
+  .navitem.done .cnt { color: var(--ok); }
+  .navbar { height: 4px; background: var(--bg); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+  .navbar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+
+  /* Toolbar */
+  .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 18px; }
+  .search { flex: 1; min-width: 200px; position: relative; }
+  .search input { width: 100%; height: var(--tap); background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: var(--r); color: var(--txt);
+    padding: 0 14px 0 38px; font-size: 14px; }
+  .search input:focus { outline: none; border-color: var(--accent); }
+  .search .icon { position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+    color: var(--txt-3); pointer-events: none; }
+  .search kbd { position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: var(--txt-3); font-size: 11px; border: 1px solid var(--line);
+    border-radius: 4px; padding: 1px 5px; }
+  .tbtn { height: var(--tap); padding: 0 14px; background: var(--bg-2);
+    border: 1px solid var(--line); border-radius: var(--r); font-size: 13px;
+    font-weight: 500; color: var(--txt-2); white-space: nowrap; }
+  .tbtn:hover { border-color: var(--accent); color: var(--txt); }
+  .tbtn.danger:hover { border-color: var(--hard); color: var(--hard); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 18px; }
+  .chip { height: 32px; padding: 0 12px; border-radius: 16px; font-size: 12px;
+    font-weight: 500; background: var(--bg-2); border: 1px solid var(--line);
+    color: var(--txt-2); }
+  .chip:hover { color: var(--txt); }
+  .chip.on { background: var(--accent); border-color: var(--accent); color: #04101f; font-weight: 600; }
+
+  /* Pattern cards */
+  .card { background: var(--bg-2); border: 1px solid var(--line);
+    border-radius: 14px; margin-bottom: 16px; overflow: hidden; }
+  .card > .head { display: flex; align-items: center; gap: 12px; padding: 16px 18px;
+    cursor: pointer; user-select: none; }
+  .card > .head:hover { background: var(--bg-3); }
+  .card .pnum { font-size: 12px; color: var(--txt-3); font-weight: 700;
+    font-variant-numeric: tabular-nums; min-width: 24px; }
+  .card .ptitle { flex: 1; }
+  .card .ptitle h2 { font-size: 16px; font-weight: 700; letter-spacing: -.2px; }
+  .card .ptitle .meta { font-size: 11px; color: var(--txt-3); margin-top: 2px;
+    display: flex; gap: 10px; flex-wrap: wrap; }
+  .card .ptitle .meta .mono { color: var(--txt-2); }
+  .prio { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; letter-spacing: .3px; }
+  .prio.P1 { background: rgba(248,81,73,.15); color: var(--p1); }
+  .prio.P2 { background: rgba(210,153,34,.15); color: var(--p2); }
+  .prio.P3 { background: rgba(63,185,80,.15); color: var(--p3); }
+  .card .pprog { font-size: 12px; color: var(--txt-2); font-variant-numeric: tabular-nums;
+    display: flex; align-items: center; gap: 8px; }
+  .card .pprog .minibar { width: 60px; height: 5px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .card .pprog .minibar > i { display: block; height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .caret { color: var(--txt-3); transition: transform .2s; }
+  .card.open .caret { transform: rotate(90deg); }
+
+  .card > .body { display: none; padding: 0 18px 18px; }
+  .card.open > .body { display: block; }
+
+  /* Template + info */
+  .info { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 4px 0 16px; }
+  .info .block { background: var(--bg); border: 1px solid var(--line);
+    border-radius: var(--r); padding: 12px 14px; }
+  .info .block h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .6px;
+    color: var(--txt-3); margin-bottom: 7px; font-weight: 700; }
+  .info .block p { font-size: 13px; color: var(--txt-2); }
+  .info .triggers { display: flex; flex-wrap: wrap; gap: 6px; }
+  .info .triggers span { font-size: 11px; background: var(--bg-3); border: 1px solid var(--line);
+    border-radius: 5px; padding: 3px 8px; color: var(--txt-2); }
+  .tmpl { grid-column: 1 / -1; }
+  .tmpl pre { background: var(--bg); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 14px; overflow-x: auto; font-size: 12.5px; line-height: 1.6; color: #c9d4e0; }
+
+  /* Problem table */
+  .ptable { width: 100%; border-collapse: collapse; }
+  .ptable th { text-align: left; font-size: 10px; text-transform: uppercase;
+    letter-spacing: .5px; color: var(--txt-3); font-weight: 700; padding: 8px 8px;
+    border-bottom: 1px solid var(--line); }
+  .ptable td { padding: 10px 8px; border-bottom: 1px solid var(--line);
+    font-size: 13px; vertical-align: top; }
+  .ptable tr:last-child td { border-bottom: none; }
+  .ptable tr.solved td { opacity: .5; }
+  .ptable tr.solved .pname a { text-decoration: line-through; }
+  .cbcell { width: 44px; }
+  .cb { width: 20px; height: 20px; border: 2px solid var(--line); border-radius: 6px;
+    display: flex; align-items: center; justify-content: center; background: var(--bg);
+    margin: 0 auto; }
+  .cbtap { display: flex; align-items: center; justify-content: center;
+    min-width: var(--tap); min-height: var(--tap); margin: -12px 0; }
+  .cb.on { background: var(--ok); border-color: var(--ok); }
+  .cb svg { opacity: 0; }
+  .cb.on svg { opacity: 1; }
+  .idx { color: var(--txt-3); font-variant-numeric: tabular-nums; width: 28px; }
+  .pdot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .pdot.P1 { background: var(--p1); } .pdot.P2 { background: var(--p2); } .pdot.P3 { background: var(--p3); }
+  .pname { min-width: 180px; font-weight: 500; }
+  .diff { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 5px; }
+  .diff.E { background: rgba(63,185,80,.15); color: var(--easy); }
+  .diff.M { background: rgba(210,153,34,.15); color: var(--med); }
+  .diff.H { background: rgba(248,81,73,.15); color: var(--hard); }
+  .co { font-size: 10.5px; color: var(--txt-3); font-family: 'JetBrains Mono', monospace; }
+  .hint { color: var(--txt-2); font-size: 12px; }
+  .insight { color: var(--txt-3); font-size: 12px; font-style: italic; }
+  .colhide { }
+
+  .empty { text-align: center; color: var(--txt-3); padding: 60px 20px; }
+
+  /* Mobile */
+  .hamburger { display: none; }
+  .scrim { display: none; }
+  @media (max-width: 860px) {
+    .info { grid-template-columns: 1fr; }
+    .sidebar {
+      position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-100%);
+      transition: transform .25s ease; box-shadow: 0 0 40px rgba(0,0,0,.5);
+    }
+    body.nav-open .sidebar { transform: translateX(0); }
+    body.nav-open .scrim { display: block; position: fixed; inset: 0; z-index: 40;
+      background: rgba(0,0,0,.55); }
+    .hamburger { display: flex; align-items: center; justify-content: center;
+      width: var(--tap); height: var(--tap); background: var(--bg-2);
+      border: 1px solid var(--line); border-radius: var(--r); flex-shrink: 0; }
+    .col-insight, .th-insight { display: none; }
+  }
+  @media (max-width: 560px) {
+    .col-hint, .th-hint, .col-co, .th-co { display: none; }
+    .card .pprog .minibar { display: none; }
+    .main { padding-bottom: 60px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><span class="dot"></span><h1>DSA Patterns</h1></div>
+    <div class="tagline">250 high-frequency FAANG problems · 25 patterns</div>
+    <div class="stats">
+      <div class="big"><span id="solvedN">0</span>/<span id="totalN">250</span> <span>solved</span></div>
+      <div class="pct" id="pctLbl">0%</div>
+      <div class="bar"><i id="overallBar"></i></div>
+      <div class="diffcounts">
+        <div><span class="swatch" style="background:var(--easy)"></span><b id="eN">0</b> Easy</div>
+        <div><span class="swatch" style="background:var(--med)"></span><b id="mN">0</b> Med</div>
+        <div><span class="swatch" style="background:var(--hard)"></span><b id="hN">0</b> Hard</div>
+      </div>
+    </div>
+    <nav class="navlist" id="navlist"></nav>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <div class="toolbar">
+      <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="search">
+        <span class="icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        <input id="search" type="search" placeholder="Search name, hint, insight…" autocomplete="off">
+        <kbd>/</kbd>
+      </div>
+      <button class="tbtn" id="expandAll">Expand all</button>
+      <button class="tbtn" id="exportBtn">Export</button>
+      <button class="tbtn" id="importBtn">Import</button>
+      <button class="tbtn danger" id="resetBtn">Reset</button>
+      <input type="file" id="importFile" accept="application/json" hidden>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div id="cards"></div>
+    <div class="empty" id="empty" hidden>No problems match your filters.</div>
+  </main>
+</div>
+
+<script src="data.js"></script>
+<script>
+(() => {
+  const KEY = 'dsa-patterns-progress-v1';
+  const load = () => { try { return new Set(JSON.parse(localStorage.getItem(KEY)) || []); } catch { return new Set(); } };
+  const save = s => localStorage.setItem(KEY, JSON.stringify([...s]));
+  let solved = load();
+
+  const pid = (p, i) => `${p.id}#${i}`;           // stable per-problem key
+  const DIFF_NAME = { E: 'Easy', M: 'Medium', H: 'Hard' };
+  let filter = 'all';                              // all|solved|unsolved|E|M|H|P1|P2|P3
+  let query = '';
+
+  const $ = s => document.querySelector(s);
+  const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const CHECK = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#04101f" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>';
+
+  // ---- Build the cards (once) ----
+  const cardsWrap = $('#cards');
+  PATTERNS.forEach(p => {
+    const card = el('div', 'card'); card.dataset.pid = p.id;
+
+    const head = el('div', 'head');
+    head.innerHTML = `
+      <span class="pnum">${String(p.number).padStart(2, '0')}</span>
+      <span class="ptitle">
+        <h2>${esc(p.name)}</h2>
+        <span class="meta">
+          <span class="prio ${p.priority}">${p.priority}</span>
+          <span class="mono">⏱ ${esc(p.time)}</span>
+          <span class="mono">◇ ${esc(p.space)}</span>
+        </span>
+      </span>
+      <span class="pprog"><span class="pp-lbl">0/10</span><span class="minibar"><i></i></span></span>
+      <span class="caret"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>`;
+    head.addEventListener('click', () => card.classList.toggle('open'));
+    card.appendChild(head);
+
+    const body = el('div', 'body');
+    const info = el('div', 'info');
+    info.innerHTML = `
+      <div class="block"><h3>When to use</h3><p>${esc(p.whenToUse)}</p></div>
+      <div class="block"><h3>Trigger signals</h3><div class="triggers">${p.triggers.map(t => `<span>${esc(t)}</span>`).join('')}</div></div>
+      <div class="block" style="grid-column:1/-1"><h3>Core idea</h3><p>${esc(p.coreIdea)}</p></div>
+      <div class="block tmpl"><h3>Template · Python</h3><pre><code>${esc(p.template)}</code></pre></div>`;
+    body.appendChild(info);
+
+    const table = el('table', 'ptable');
+    table.innerHTML = `<thead><tr>
+      <th class="cbcell"></th><th>#</th><th></th><th>Problem</th><th>Diff</th>
+      <th class="th-co">Companies</th><th class="th-hint">Hint</th><th class="th-insight">Key insight</th>
+    </tr></thead>`;
+    const tb = el('tbody');
+    p.problems.forEach((pr, i) => {
+      const [name, slug, diff, prio, co, hint, insight] = pr;
+      const key = pid(p, i);
+      const tr = el('tr'); tr.dataset.key = key;
+      tr.dataset.name = name.toLowerCase();
+      tr.dataset.hint = (hint + ' ' + insight).toLowerCase();
+      tr.dataset.diff = diff; tr.dataset.prio = prio;
+      tr.innerHTML = `
+        <td class="cbcell"><div class="cbtap" role="checkbox" tabindex="0" aria-label="Mark solved: ${esc(name)}"><div class="cb">${CHECK}</div></div></td>
+        <td class="idx">${i + 1}</td>
+        <td><span class="pdot ${prio}" title="${prio}"></span></td>
+        <td class="pname"><a href="${LC}${slug}" target="_blank" rel="noopener">${esc(name)}</a></td>
+        <td><span class="diff ${diff}" title="${DIFF_NAME[diff]}">${diff}</span></td>
+        <td class="col-co co">${esc(co)}</td>
+        <td class="col-hint hint">${esc(hint)}</td>
+        <td class="col-insight insight">${esc(insight)}</td>`;
+      const toggle = () => { solved.has(key) ? solved.delete(key) : solved.add(key); save(solved); refresh(); };
+      const tap = tr.querySelector('.cbtap');
+      tap.addEventListener('click', toggle);
+      tap.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggle(); } });
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+    body.appendChild(table);
+    card.appendChild(body);
+    cardsWrap.appendChild(card);
+  });
+
+  // ---- Sidebar nav ----
+  const navlist = $('#navlist');
+  PATTERNS.forEach(p => {
+    const a = el('a', 'navitem'); a.href = '#'; a.dataset.pid = p.id;
+    a.innerHTML = `<span class="row1">
+        <span class="num">${String(p.number).padStart(2, '0')}</span>
+        <span class="nm">${esc(p.name)}</span>
+        <span class="cnt">0/10</span>
+      </span><span class="navbar"><i></i></span>`;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const card = cardsWrap.querySelector(`.card[data-pid="${p.id}"]`);
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.body.classList.remove('nav-open');
+    });
+    navlist.appendChild(a);
+  });
+
+  // ---- Chips ----
+  const CHIPS = [['all', 'All'], ['solved', 'Solved'], ['unsolved', 'Unsolved'],
+    ['E', 'Easy'], ['M', 'Medium'], ['H', 'Hard'], ['P1', 'P1'], ['P2', 'P2'], ['P3', 'P3']];
+  const chipsWrap = $('#chips');
+  CHIPS.forEach(([v, label]) => {
+    const b = el('button', 'chip' + (v === 'all' ? ' on' : ''), label);
+    b.dataset.v = v;
+    b.addEventListener('click', () => {
+      filter = v;
+      chipsWrap.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c.dataset.v === v));
+      refresh();
+    });
+    chipsWrap.appendChild(b);
+  });
+
+  // ---- Filtering + stats refresh ----
+  function rowVisible(tr) {
+    const key = tr.dataset.key, isSolved = solved.has(key);
+    if (filter === 'solved' && !isSolved) return false;
+    if (filter === 'unsolved' && isSolved) return false;
+    if (['E', 'M', 'H'].includes(filter) && tr.dataset.diff !== filter) return false;
+    if (['P1', 'P2', 'P3'].includes(filter) && tr.dataset.prio !== filter) return false;
+    if (query && !tr.dataset.name.includes(query) && !tr.dataset.hint.includes(query)) return false;
+    return true;
+  }
+
+  function refresh() {
+    let total = 0, sN = 0, e = 0, m = 0, h = 0, anyVisible = false;
+    PATTERNS.forEach(p => {
+      const card = cardsWrap.querySelector(`.card[data-pid="${p.id}"]`);
+      let pSolved = 0, pVisible = 0;
+      p.problems.forEach((pr, i) => {
+        const key = pid(p, i);
+        const tr = card.querySelector(`tr[data-key="${key}"]`);
+        const isSolved = solved.has(key);
+        total++;
+        if (isSolved) { sN++; if (pr[2] === 'E') e++; else if (pr[2] === 'M') m++; else h++; pSolved++; }
+        const vis = rowVisible(tr);
+        tr.hidden = !vis;
+        tr.classList.toggle('solved', isSolved);
+        tr.querySelector('.cb').classList.toggle('on', isSolved);
+        tr.querySelector('.cbtap').setAttribute('aria-checked', isSolved);
+        if (vis) { pVisible++; anyVisible = true; }
+      });
+      // card visibility
+      card.hidden = pVisible === 0;
+      // per-pattern progress
+      card.querySelector('.pp-lbl').textContent = `${pSolved}/10`;
+      card.querySelector('.pprog .minibar > i').style.width = (pSolved * 10) + '%';
+      const nav = navlist.querySelector(`.navitem[data-pid="${p.id}"]`);
+      nav.querySelector('.cnt').textContent = `${pSolved}/10`;
+      nav.querySelector('.navbar > i').style.width = (pSolved * 10) + '%';
+      nav.classList.toggle('done', pSolved === 10);
+    });
+    $('#solvedN').textContent = sN;
+    $('#totalN').textContent = total;
+    const pct = total ? Math.round(sN / total * 100) : 0;
+    $('#pctLbl').textContent = pct + '%';
+    $('#overallBar').style.width = pct + '%';
+    $('#eN').textContent = e; $('#mN').textContent = m; $('#hN').textContent = h;
+    $('#empty').hidden = anyVisible;
+  }
+
+  // ---- Toolbar actions ----
+  const searchInput = $('#search');
+  searchInput.addEventListener('input', () => { query = searchInput.value.trim().toLowerCase(); refresh(); });
+
+  $('#expandAll').addEventListener('click', function () {
+    const cards = [...cardsWrap.querySelectorAll('.card')];
+    const anyClosed = cards.some(c => !c.classList.contains('open') && !c.hidden);
+    cards.forEach(c => c.classList.toggle('open', anyClosed));
+    this.textContent = anyClosed ? 'Collapse all' : 'Expand all';
+  });
+
+  $('#resetBtn').addEventListener('click', () => {
+    if (confirm('Reset all progress on this device? This cannot be undone.')) {
+      solved = new Set(); save(solved); refresh();
+    }
+  });
+
+  // Export / Import (manual cross-device sync — localStorage is per-device)
+  $('#exportBtn').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({ v: 1, solved: [...solved], exported: new Date().toISOString() }, null, 2)],
+      { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = el('a'); a.href = url;
+    a.download = `dsa-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+  });
+  $('#importBtn').addEventListener('click', () => $('#importFile').click());
+  $('#importFile').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        const arr = Array.isArray(data) ? data : data.solved;
+        if (!Array.isArray(arr)) throw new Error('bad format');
+        const mode = confirm('OK = merge with current progress. Cancel = replace it.');
+        solved = mode ? new Set([...solved, ...arr]) : new Set(arr);
+        save(solved); refresh();
+        alert(`Imported ${arr.length} solved problems.`);
+      } catch { alert('Could not read that file — expected a JSON export from this app.'); }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  });
+
+  // ---- Mobile nav ----
+  $('#hamburger').addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  $('#scrim').addEventListener('click', () => document.body.classList.remove('nav-open'));
+
+  // ---- Keyboard: / focuses search, Esc clears ----
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement !== searchInput) { e.preventDefault(); searchInput.focus(); }
+    else if (e.key === 'Escape') {
+      if (document.activeElement === searchInput && searchInput.value) { searchInput.value = ''; query = ''; refresh(); }
+      document.body.classList.remove('nav-open');
+    }
+  });
+
+  refresh();
+})();
+</script>
+</body>
+</html>
