@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Google Drill — Pattern Recognition & Delivery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080809; --bg-1: #0d0d0f; --bg-2: #131316; --bg-3: #1b1b20;
+    --bg-hover: #202027; --elev: #17171b; --line: #26262d; --line-2: #34343d;
+    --txt: #f5f5f7; --txt-2: #a8a8b3; --txt-3: #6b6b78;
+    --green: #1ed760; --green-dim: rgba(30,215,96,.14); --green-glow: rgba(30,215,96,.35);
+    --red: #e50914; --red-hi: #ff2b38; --red-dim: rgba(229,9,20,.16); --red-glow: rgba(229,9,20,.4);
+    --med: #ffb020; --hard: #ff424f; --easy: #1ed760;
+    --r: 9px; --r-lg: 14px; --tap: 44px;
+    --sidebar-w: 284px; --topbar-h: 62px;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--bg); color: var(--txt); }
+  body {
+    -webkit-font-smoothing: antialiased; line-height: 1.5;
+    background:
+      radial-gradient(1100px 620px at 88% -8%, rgba(229,9,20,.10), transparent 60%),
+      radial-gradient(1000px 560px at -6% 108%, rgba(30,215,96,.09), transparent 58%),
+      var(--bg);
+    background-attachment: fixed;
+  }
+  code, .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+  a { color: var(--txt); text-decoration: none; }
+  a:hover { color: var(--green); }
+  button { font: inherit; cursor: pointer; color: inherit; background: none; border: none; }
+  ::selection { background: var(--red-dim); }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-thumb { background: #2c2c34; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: #3d3d47; background-clip: content-box; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  @keyframes popIn { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 var(--red-glow); } 50% { box-shadow: 0 0 0 5px rgba(229,9,20,.12); } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; } }
+
+  .app { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: linear-gradient(180deg, #0b0b0d 0%, var(--bg) 100%);
+    border-right: 1px solid var(--line);
+    position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    padding: 18px 10px 24px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .main { flex: 1; min-width: 0; }
+
+  .brand { display: flex; align-items: center; gap: 12px; padding: 4px 12px 8px; }
+  .brand .dot { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(140deg, var(--red-hi) 0%, var(--red) 45%, #1ed760 130%);
+    box-shadow: 0 6px 18px rgba(229,9,20,.4), inset 0 1px 0 rgba(255,255,255,.25);
+    display: flex; align-items: center; justify-content: center; }
+  .brand h1 { font-size: 19px; font-weight: 800; letter-spacing: -.5px; line-height: 1.05;
+    background: linear-gradient(90deg, #fff, #cfcfd6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .brand .sub { color: var(--txt-3); font-size: 11px; font-weight: 600; letter-spacing: .2px; }
+
+  .backlink { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px;
+    color: var(--txt-2); font-size: 12px; font-weight: 600; transition: all .15s; }
+  .backlink:hover { background: var(--bg-hover); color: var(--txt); }
+
+  .navhdr { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--txt-3);
+    font-weight: 800; padding: 10px 12px 4px; }
+  .navlist { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
+  .navitem { display: block; padding: 8px 12px; border-radius: 8px; color: var(--txt-2);
+    font-size: 13px; position: relative; transition: background .16s, color .16s, transform .16s cubic-bezier(.22,1,.36,1); }
+  .navitem::before { content: ''; position: absolute; left: 0; top: 20%; bottom: 20%; width: 3px;
+    border-radius: 3px; background: var(--red); opacity: 0; transition: opacity .16s; }
+  .navitem:hover { background: var(--bg-hover); color: var(--txt); transform: translateX(3px); }
+  .navitem.active { background: linear-gradient(90deg, rgba(229,9,20,.14), rgba(229,9,20,.02)); color: #fff; transform: translateX(3px); }
+  .navitem.active::before { opacity: 1; box-shadow: 0 0 12px var(--red-glow); }
+  .navitem .row1 { display: flex; align-items: center; gap: 10px; }
+  .navitem .rank { width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; font-size: 11px; font-weight: 800;
+    background: var(--bg-3); color: var(--txt-3); font-variant-numeric: tabular-nums; transition: all .2s; }
+  .navitem.active .rank { background: var(--red); color: #fff; box-shadow: 0 0 10px var(--red-glow); }
+  .navitem .nm { flex: 1; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .topbar { position: sticky; top: 0; z-index: 30; min-height: var(--topbar-h);
+    display: flex; align-items: center; gap: 16px; padding: 0 clamp(16px, 2.5vw, 30px);
+    background: rgba(8,8,9,.78); backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4); border-bottom: 1px solid var(--line); }
+  .topbar .lead { display: flex; align-items: baseline; gap: 12px; min-width: 0; }
+  .topbar .lead h2 { font-size: 19px; font-weight: 800; letter-spacing: -.4px; white-space: nowrap; }
+  .topbar .lead .crumbs { font-size: 12px; color: var(--txt-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 1180px) { .topbar .lead h2 { display: none; } }
+  .topbar .spacer { flex: 1; }
+
+  .content { padding: 22px clamp(16px, 2.5vw, 30px) 90px; max-width: 1000px; }
+
+  /* ---- Drill mode panel ---- */
+  .drillbar { display: grid; grid-template-columns: 1.4fr 1fr; gap: 13px; margin-bottom: 22px; }
+  @media (max-width: 760px) { .drillbar { grid-template-columns: 1fr; } }
+  .panel { border-radius: var(--r-lg); padding: 16px 18px;
+    background: linear-gradient(160deg, #16161b 0%, #101013 100%);
+    border: 1px solid var(--line); box-shadow: 0 4px 18px rgba(0,0,0,.35); }
+  .panel h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
+    display: inline-flex; align-items: center; gap: 7px; margin-bottom: 12px; }
+  .panel.recog h3 { color: var(--red-hi); }
+  .panel.recog h3::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--red-hi); box-shadow: 0 0 8px var(--red-glow); }
+  .panel.timer h3 { color: var(--green); }
+  .panel.timer h3::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+
+  .recog .prompt { font-size: 14px; line-height: 1.55; color: var(--txt); min-height: 62px;
+    background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+  .recog .prompt .muted { color: var(--txt-3); font-style: italic; }
+  .recog .answer { margin-top: 10px; font-size: 13px; color: var(--txt-2); display: none; }
+  .recog .answer.show { display: block; animation: slideDown .25s ease both; }
+  .recog .answer b { color: var(--green); font-weight: 700; }
+  .recog .btnrow { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+  .dbtn { height: 34px; padding: 0 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--line); background: var(--bg-2); color: var(--txt-2); transition: all .15s; }
+  .dbtn:hover { color: var(--txt); background: var(--bg-3); transform: translateY(-1px); }
+  .dbtn.primary { background: linear-gradient(135deg, var(--red-hi), var(--red)); color: #fff; border-color: transparent; box-shadow: 0 2px 12px var(--red-glow); }
+  .dbtn.ok { background: linear-gradient(135deg, #22e065, #159c43); color: #04120a; border-color: transparent; box-shadow: 0 2px 12px var(--green-glow); }
+  .score { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--txt-2); font-variant-numeric: tabular-nums; }
+  .score b { color: var(--green); }
+
+  .timer .clock { font-size: 46px; font-weight: 800; letter-spacing: -1px; line-height: 1;
+    font-variant-numeric: tabular-nums; text-align: center; margin: 4px 0 6px; }
+  .timer .clock.warn { color: var(--med); }
+  .timer .clock.crit { color: var(--hard); animation: pulseRed 1s infinite; border-radius: 12px; }
+  .timer .tprog { height: 6px; background: #000; border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.6); }
+  .timer .tprog > i { display: block; height: 100%; width: 100%; border-radius: 4px;
+    background: linear-gradient(90deg, #159c43, var(--green)); box-shadow: 0 0 10px var(--green-glow); transition: width 1s linear; }
+  .timer .tbtns { display: flex; gap: 8px; margin-top: 12px; }
+  .timer .tbtns .dbtn { flex: 1; text-align: center; }
+  .timer .hint { font-size: 11px; color: var(--txt-3); text-align: center; margin-top: 9px; }
+
+  /* ---- Pattern drill cards ---- */
+  .card { border-radius: var(--r-lg); margin-bottom: 13px; overflow: hidden;
+    background: linear-gradient(160deg, #16161b 0%, #101013 100%);
+    border: 1px solid var(--line); box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    transition: border-color .18s, box-shadow .18s, transform .18s; animation: fadeUp .35s ease both; }
+  .card:hover { border-color: var(--line-2); box-shadow: 0 10px 30px rgba(0,0,0,.5); transform: translateY(-2px); }
+  .card.open { border-color: var(--line-2); box-shadow: 0 14px 40px rgba(0,0,0,.55); transform: none; }
+  .card > .head { display: flex; align-items: flex-start; gap: 15px; padding: 15px 18px;
+    cursor: pointer; user-select: none; }
+  .card .pnum { font-size: 12px; color: #fff; font-weight: 800; font-variant-numeric: tabular-nums;
+    width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(140deg, var(--red-hi), var(--red)); box-shadow: 0 3px 10px var(--red-glow); margin-top: 1px; }
+  .card .ptitle { flex: 1; min-width: 0; }
+  .card .ptitle .r1 { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .card .ptitle h3 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .card .ptitle .crux { display: flex; align-items: baseline; gap: 8px; margin-top: 7px;
+    font-size: 12.5px; color: var(--txt-2); line-height: 1.45; }
+  .card .ptitle .crux-k { flex-shrink: 0; font-size: 8.5px; font-weight: 800; letter-spacing: .8px;
+    color: var(--med); background: rgba(255,176,32,.14); border: 1px solid rgba(255,176,32,.3);
+    padding: 2px 6px; border-radius: 5px; transform: translateY(-1px); }
+  /* 10-second recognition — the second always-visible line */
+  .card .ptitle .recog10 { display: flex; align-items: baseline; gap: 8px; margin-top: 7px;
+    font-size: 12.5px; color: var(--txt); line-height: 1.45; }
+  .card .ptitle .recog10 .r-k { flex-shrink: 0; font-size: 8.5px; font-weight: 800; letter-spacing: .8px;
+    color: var(--red-hi); background: var(--red-dim); border: 1px solid rgba(255,43,56,.35);
+    padding: 2px 6px; border-radius: 5px; transform: translateY(-1px); }
+  .card .ptitle .recog10 em { color: #fff; font-style: normal; font-weight: 600; }
+  .card .ptitle .whyrank { font-size: 11px; color: var(--txt-3); margin-top: 7px; font-style: italic; }
+  .caret { color: var(--txt-3); transition: transform .25s, color .2s; display: flex; margin-top: 3px; flex-shrink: 0; }
+  .card.open .caret { transform: rotate(90deg); color: var(--green); }
+
+  .card > .body { display: none; padding: 4px 18px 18px; }
+  .card.open > .body { display: block; animation: slideDown .32s cubic-bezier(.22,1,.36,1) both; }
+
+  .section { margin-top: 15px; }
+  .section > .lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
+    margin-bottom: 8px; display: inline-flex; align-items: center; gap: 6px; }
+  .section > .lbl::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+  .section.say > .lbl { color: var(--green); }
+  .section.say > .lbl::before { background: var(--green); box-shadow: 0 0 8px var(--green-glow); }
+  .section.follow > .lbl { color: var(--med); }
+  .section.follow > .lbl::before { background: var(--med); box-shadow: 0 0 8px rgba(255,176,32,.5); }
+  .section.edge > .lbl { color: var(--red-hi); }
+  .section.edge > .lbl::before { background: var(--red-hi); box-shadow: 0 0 8px var(--red-glow); }
+  .section.tmpl > .lbl { color: var(--txt-2); }
+  .section.tmpl > .lbl::before { background: var(--txt-2); }
+
+  /* Say-it-out-loud script — the interview delivery */
+  .sayscript { background: var(--bg-1); border: 1px solid var(--line); border-left: 3px solid var(--green);
+    border-radius: var(--r); padding: 13px 16px 13px 18px; }
+  .sayscript li { list-style: none; font-size: 13.5px; color: var(--txt); line-height: 1.6; padding: 4px 0;
+    display: flex; gap: 10px; }
+  .sayscript li::before { content: '“'; color: var(--green); font-weight: 800; font-size: 18px; line-height: 1; flex-shrink: 0; }
+  .sayscript li b { color: var(--green); font-weight: 700; }
+  .sayscript li .cx { color: var(--med); font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+
+  .followbox { background: rgba(255,176,32,.06); border: 1px solid rgba(255,176,32,.22); border-radius: var(--r); padding: 12px 15px; }
+  .followbox .q { font-size: 12.5px; color: var(--med); font-weight: 700; margin-bottom: 5px; }
+  .followbox .a { font-size: 13.5px; color: var(--txt); line-height: 1.55; }
+
+  .edgelist { display: flex; flex-direction: column; gap: 7px; }
+  .edgelist li { list-style: none; font-size: 13px; color: var(--txt-2); line-height: 1.5;
+    display: flex; gap: 9px; align-items: flex-start; }
+  .edgelist li::before { content: '▸'; color: var(--red-hi); flex-shrink: 0; font-size: 12px; margin-top: 1px; }
+  .edgelist li b { color: var(--txt); font-weight: 700; }
+
+  .tmpl pre { background: linear-gradient(180deg, #060607, #0b0b0d); border: 1px solid var(--line); border-radius: var(--r);
+    padding: 16px 18px; overflow-x: auto; font-size: 12.5px; line-height: 1.7; color: #d4dbe4; box-shadow: inset 0 2px 10px rgba(0,0,0,.5); }
+  .tmpl pre .warn { background: rgba(255,66,79,.14); box-shadow: -6px 0 0 rgba(255,66,79,.14), 6px 0 0 rgba(255,66,79,.14);
+    border-radius: 2px; color: #ffd9dc; }
+  .tmpl .warnnote { font-size: 11px; color: var(--hard); margin-top: 7px; display: flex; align-items: center; gap: 6px; }
+  .tmpl .warnnote::before { content: '⚠'; }
+
+  /* Problems */
+  .ptable { width: 100%; border-collapse: collapse; margin-top: 4px; }
+  .ptable td { padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.045); font-size: 13px; vertical-align: middle; }
+  .ptable tr:last-child td { border-bottom: none; }
+  .ptable tbody tr { transition: background .13s; }
+  .ptable tbody tr:hover { background: linear-gradient(90deg, rgba(229,9,20,.07), transparent 80%); }
+  .ptable .pname { font-weight: 600; }
+  .ptable .pname a { display: inline-flex; align-items: center; gap: 6px; }
+  .ptable .pname a::after { content: '↗'; font-size: 11px; opacity: 0; color: var(--green); transition: opacity .15s; }
+  .ptable .pname a:hover::after { opacity: 1; }
+  .diff { font-size: 10px; font-weight: 800; padding: 3px 10px; border-radius: 999px; letter-spacing: .3px; }
+  .diff.E { background: var(--green-dim); color: var(--easy); box-shadow: inset 0 0 0 1px rgba(30,215,96,.28); }
+  .diff.M { background: rgba(255,176,32,.14); color: var(--med); box-shadow: inset 0 0 0 1px rgba(255,176,32,.28); }
+  .diff.H { background: var(--red-dim); color: var(--hard); box-shadow: inset 0 0 0 1px rgba(255,66,79,.28); }
+  .vtag { font-size: 10px; font-weight: 700; color: var(--txt-3); background: var(--bg-3); border: 1px solid var(--line);
+    padding: 3px 9px; border-radius: 6px; letter-spacing: .2px; white-space: nowrap; }
+
+  .hamburger { display: none; }
+  .scrim { display: none; }
+  @media (max-width: 860px) {
+    .sidebar { position: fixed; left: 0; top: 0; z-index: 50; transform: translateX(-100%);
+      transition: transform .25s ease; box-shadow: 0 8px 40px rgba(0,0,0,.7); background: var(--bg-1); }
+    body.nav-open .sidebar { transform: translateX(0); }
+    body.nav-open .scrim { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.6); }
+    .hamburger { display: flex; align-items: center; justify-content: center; width: var(--tap); height: var(--tap); color: var(--txt); flex-shrink: 0; margin-left: -8px; }
+  }
+  @media (max-width: 560px) {
+    .ptable .th-v, .ptable .col-v { display: none; }
+    .timer .clock { font-size: 38px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></span>
+      <div><h1>Google Drill</h1><div class="sub">Recognize fast · say it fluent</div></div>
+    </div>
+    <a class="backlink" href="index.html">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to full tracker
+    </a>
+    <div class="navhdr">Drill priority</div>
+    <nav class="navlist" id="navlist"></nav>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <div class="lead">
+        <h2>Google Drill</h2>
+        <span class="crumbs">14 patterns · rehearsal, not reference</span>
+      </div>
+      <div class="spacer"></div>
+    </header>
+    <div class="content">
+
+      <!-- INTERACTIVE DRILL MODE -->
+      <div class="drillbar">
+        <div class="panel recog">
+          <h3>Recognition Trainer</h3>
+          <div class="prompt" id="recogPrompt"><span class="muted">Hit “New prompt” — read the first sentence, name the pattern out loud, then reveal.</span></div>
+          <div class="answer" id="recogAnswer"></div>
+          <div class="btnrow">
+            <button class="dbtn primary" id="recogNew">New prompt</button>
+            <button class="dbtn" id="recogReveal" disabled>Reveal</button>
+            <button class="dbtn ok" id="recogRight" disabled>Got it ✓</button>
+            <button class="dbtn" id="recogWrong" disabled>Missed ✗</button>
+            <span class="score">Score <b id="recogScore">0</b> / <span id="recogSeen">0</span></span>
+          </div>
+        </div>
+        <div class="panel timer">
+          <h3>Rehearsal Timer</h3>
+          <div class="clock" id="clock">1:30</div>
+          <div class="tprog"><i id="tprog"></i></div>
+          <div class="tbtns">
+            <button class="dbtn ok" id="timerStart">Start 90s</button>
+            <button class="dbtn" id="timerReset">Reset</button>
+          </div>
+          <div class="hint">Deliver the say-it-out-loud script before it hits zero.</div>
+        </div>
+      </div>
+
+      <div id="cards"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+const LC = 'https://leetcode.com/problems/';
+// Drill dataset — Google-frequency-weighted priority order.
+// Each pattern: recognition trigger, spoken opener, follow-up, skeleton (warn lines), edge cases, anchor problems.
+const PATTERNS = [
+  {
+    id: 'graph', name: 'Graph BFS / DFS', crux: 'Model as nodes+edges, then flood-fill or shortest-hop from a source.',
+    recog: 'grid / matrix / “connected” / “reach” / “islands” / “rooms” — anything that’s secretly a graph',
+    whyRank: '#1: most common Google on-site shape; a slow start here bleeds into every graph follow-up.',
+    say: [
+      ['This is a graph traversal — I\'ll treat each ', 'cell/node as a vertex and its neighbors as edges', '.'],
+      ['Brute force is re-exploring from every node — ', 'O(V·(V+E))', '.'],
+      ['I\'ll BFS/DFS once with a visited set so each node is touched once — ', 'O(V+E) time, O(V) space', '.'],
+      ['BFS if I need shortest unweighted distance; DFS if I just need reachability/components.']
+    ],
+    follow: ['“Shortest path with weights?” → Dijkstra with a heap (O(E log V)); if edges are 0/1, use 0-1 BFS with a deque.'],
+    lang: 'Python',
+    tmpl: [
+      ['def bfs(start, grid):', 0],
+      ['    from collections import deque', 0],
+      ['    q, seen = deque([start]), {start}   # seed visited WITH start, not on pop', 1],
+      ['    while q:', 0],
+      ['        r, c = q.popleft()', 0],
+      ['        for nr, nc in neighbors(r, c):', 0],
+      ['            if (nr,nc) not in seen and valid(nr,nc):', 1],
+      ['                seen.add((nr,nc))        # mark on ENQUEUE, else dupes in queue', 1],
+      ['                q.append((nr,nc))', 0]
+    ],
+    warnNote: 'Mark visited when you enqueue, not when you pop — popping late lets the same node enter the queue twice.',
+    edges: [
+      ['Empty grid / no nodes', ' — return 0 or [] immediately.'],
+      ['Disconnected components', ' — outer loop over all nodes, not just one source.'],
+      ['Self-loops or already-visited start', ' — visited set handles it, but say so.']
+    ],
+    probs: [
+      ['Number of Islands', 'number-of-islands', 'M', 'flood-fill'],
+      ['Rotting Oranges', 'rotting-oranges', 'M', 'multi-source BFS'],
+      ['Word Ladder', 'word-ladder', 'H', 'implicit graph'],
+      ['Clone Graph', 'clone-graph', 'M', 'hash + DFS'],
+      ['Pacific Atlantic Water Flow', 'pacific-atlantic-water-flow', 'M', 'reverse BFS'],
+      ['Shortest Path in Binary Matrix', 'shortest-path-in-binary-matrix', 'M', '8-dir BFS'],
+      ['Walls and Gates', 'walls-and-gates', 'M', 'multi-source'],
+      ['01 Matrix', '01-matrix', 'M', 'dist BFS'],
+      ['Surrounded Regions', 'surrounded-regions', 'M', 'border DFS'],
+      ['Word Ladder II', 'word-ladder-ii', 'H', 'BFS + path']
+    ]
+  },
+  {
+    id: 'sliding-window', name: 'Sliding Window + HashMap', crux: 'Grow right, shrink left to keep the window valid; track best as you slide.',
+    recog: '“contiguous substring/subarray” + “longest / shortest / at most K / exactly K”',
+    whyRank: '#2: highest ROI string question; recruiters open with it and expect O(n) instantly.',
+    say: [
+      ['Contiguous window problem — I\'ll use two pointers with a ', 'hashmap of the window contents', '.'],
+      ['Brute force checks every substring — ', 'O(n²) or O(n³)', '.'],
+      ['I expand right, and while the window breaks the constraint I shrink left — each index enters/leaves once, so ', 'O(n) time, O(k) space', '.'],
+      ['“At most K” minus “at most K-1” gives me “exactly K” when I need it.']
+    ],
+    follow: ['“Can you do it in one pass with O(1) extra space?” → if the alphabet is fixed (26 letters), the hashmap is a fixed-size array → O(1) space.'],
+    lang: 'Python',
+    tmpl: [
+      ['def longest_valid(s):', 0],
+      ['    left = 0; window = {}; best = 0', 0],
+      ['    for right, ch in enumerate(s):', 0],
+      ['        window[ch] = window.get(ch, 0) + 1', 0],
+      ['        while not_valid(window):        # shrink BEFORE recording best', 1],
+      ['            window[s[left]] -= 1', 0],
+      ['            if window[s[left]] == 0: del window[s[left]]', 0],
+      ['            left += 1', 0],
+      ['        best = max(best, right - left + 1)  # off-by-one lives here', 1]
+    ],
+    warnNote: 'Shrink until valid before recording best, and window length is right−left+1 (not right−left).',
+    edges: [
+      ['Empty string', ' — best stays 0.'],
+      ['Window size 0 / K = 0', ' — clarify whether that\'s valid before coding.'],
+      ['All same characters', ' — window never shrinks; make sure best still updates.']
+    ],
+    probs: [
+      ['Longest Substring Without Repeating Characters', 'longest-substring-without-repeating-characters', 'M', 'distinct'],
+      ['Minimum Window Substring', 'minimum-window-substring', 'H', 'cover-all'],
+      ['Longest Repeating Character Replacement', 'longest-repeating-character-replacement', 'M', 'at-most-k'],
+      ['Permutation in String', 'permutation-in-string', 'M', 'fixed window'],
+      ['Subarrays with K Different Integers', 'subarrays-with-k-different-integers', 'H', 'exactly-k'],
+      ['Fruit Into Baskets', 'fruit-into-baskets', 'M', 'at-most-2'],
+      ['Find All Anagrams in a String', 'find-all-anagrams-in-a-string', 'M', 'fixed window'],
+      ['Sliding Window Maximum', 'sliding-window-maximum', 'H', 'monodeque'],
+      ['Longest Substring with At Most K Distinct Characters', 'longest-substring-with-at-most-k-distinct-characters', 'M', 'at-most-k'],
+      ['Minimum Size Subarray Sum', 'minimum-size-subarray-sum', 'M', 'shrink-to-target']
+    ]
+  },
+  {
+    id: 'intervals', name: 'Intervals / Sweep Line', crux: 'Sort by start (or by event), then sweep once merging or counting overlaps.',
+    recog: '“intervals”, “meetings”, “merge”, “overlap”, “rooms needed”, start/end times',
+    whyRank: '#3: calendar/scheduling questions are a Google staple; the sort-then-sweep reflex must be automatic.',
+    say: [
+      ['These are intervals — first move is to ', 'sort by start time', '.'],
+      ['Brute force compares every pair for overlap — ', 'O(n²)', '.'],
+      ['After sorting I sweep once, merging when current.start ≤ last.end — ', 'O(n log n) for the sort, O(n) sweep', '.'],
+      ['For “max concurrent”, I split into +1 start / −1 end events and sweep a running counter.']
+    ],
+    follow: ['“Minimum meeting rooms?” → sweep-line: sort start and end times separately, or a min-heap of end times; peak concurrency is the answer.'],
+    lang: 'Python',
+    tmpl: [
+      ['def merge(intervals):', 0],
+      ['    intervals.sort(key=lambda x: x[0])   # sort by START — the whole trick', 1],
+      ['    out = [intervals[0]]', 0],
+      ['    for s, e in intervals[1:]:', 0],
+      ['        if s <= out[-1][1]:              # overlap: use <=, touching counts', 1],
+      ['            out[-1][1] = max(out[-1][1], e)  # extend, don\'t just take e', 1],
+      ['        else:', 0],
+      ['            out.append([s, e])', 0],
+      ['    return out', 0]
+    ],
+    warnNote: 'Use max(last.end, e) when merging (the new interval may sit inside the old one), and decide if touching endpoints count as overlap.',
+    edges: [
+      ['Empty or single interval', ' — return as-is.'],
+      ['Touching endpoints [1,2],[2,3]', ' — state your overlap convention out loud.'],
+      ['Fully nested interval', ' — max() on end handles it; mention it.']
+    ],
+    probs: [
+      ['Merge Intervals', 'merge-intervals', 'M', 'merge'],
+      ['Insert Interval', 'insert-interval', 'M', 'insert'],
+      ['Non-overlapping Intervals', 'non-overlapping-intervals', 'M', 'greedy-remove'],
+      ['Meeting Rooms II', 'meeting-rooms-ii', 'M', 'min-rooms'],
+      ['Interval List Intersections', 'interval-list-intersections', 'M', 'two-pointer'],
+      ['My Calendar I', 'my-calendar-i', 'M', 'booking'],
+      ['Meeting Rooms', 'meeting-rooms', 'E', 'can-attend'],
+      ['Employee Free Time', 'employee-free-time', 'H', 'merge-gaps'],
+      ['Car Pooling', 'car-pooling', 'M', 'diff-array'],
+      ['Minimum Number of Arrows to Burst Balloons', 'minimum-number-of-arrows-to-burst-balloons', 'M', 'greedy-overlap']
+    ]
+  },
+  {
+    id: 'mono-stack', name: 'Monotonic Stack', crux: 'Keep a stack ordered; pop while it violates order to find the next greater/smaller.',
+    recog: '“next greater / smaller element”, “span”, “first taller”, “largest rectangle”',
+    whyRank: '#4: the pattern people freeze on — recognizing it instantly turns a scary problem into 10 lines.',
+    say: [
+      ['This is a next-greater-element shape — I\'ll use a ', 'monotonic stack of indices', '.'],
+      ['Brute force scans forward for each element — ', 'O(n²)', '.'],
+      ['I keep the stack decreasing; when a bigger element arrives I pop and resolve those — each index is pushed/popped once, ', 'O(n) time, O(n) space', '.'],
+      ['I store indices, not values, so I can compute distances/widths.']
+    ],
+    follow: ['“Largest rectangle in histogram?” → same stack, but on pop compute area = height × width where width spans between the new boundary and the element below.'],
+    lang: 'Python',
+    tmpl: [
+      ['def next_greater(nums):', 0],
+      ['    res = [-1] * len(nums)', 0],
+      ['    stack = []                       # holds INDICES, decreasing by value', 1],
+      ['    for i, n in enumerate(nums):', 0],
+      ['        while stack and nums[stack[-1]] < n:   # strict < vs <= matters', 1],
+      ['            res[stack.pop()] = n', 0],
+      ['        stack.append(i)', 0],
+      ['    return res', 0]
+    ],
+    warnNote: 'Push indices (not values), and pick strict < vs ≤ deliberately — it decides how ties/duplicates resolve.',
+    edges: [
+      ['Strictly decreasing input', ' — nothing pops until the end; all answers stay -1.'],
+      ['Duplicates', ' — your < vs ≤ choice determines behavior; say which.'],
+      ['Leftover stack items', ' — they have no next-greater; leave as default.']
+    ],
+    probs: [
+      ['Daily Temperatures', 'daily-temperatures', 'M', 'next-warmer'],
+      ['Next Greater Element II', 'next-greater-element-ii', 'M', 'circular'],
+      ['Largest Rectangle in Histogram', 'largest-rectangle-in-histogram', 'H', 'area'],
+      ['Trapping Rain Water', 'trapping-rain-water', 'H', 'water'],
+      ['Sum of Subarray Minimums', 'sum-of-subarray-minimums', 'M', 'contribution'],
+      ['Remove K Digits', 'remove-k-digits', 'M', 'greedy-stack'],
+      ['Next Greater Element I', 'next-greater-element-i', 'E', 'map+stack'],
+      ['Maximal Rectangle', 'maximal-rectangle', 'H', 'histogram rows'],
+      ['Online Stock Span', 'online-stock-span', 'M', 'span'],
+      ['Remove Duplicate Letters', 'remove-duplicate-letters', 'M', 'lexico-stack']
+    ]
+  },
+  {
+    id: 'tree', name: 'Tree DFS / BFS', crux: 'Recurse: solve children, combine at the node; or level-order with a queue.',
+    recog: '“binary tree”, “root”, “ancestor”, “path”, “level”, “depth”, “subtree”',
+    whyRank: '#5: nearly guaranteed to appear; the recursion+combine reflex should need zero warm-up.',
+    say: [
+      ['Tree problem — I\'ll ', 'recurse, get answers from left and right subtrees, then combine at the node', '.'],
+      ['There\'s rarely a worse brute force; the naive risk is recomputing subtrees — ', 'O(n²)', '.'],
+      ['A single post-order pass visits each node once — ', 'O(n) time, O(h) stack space', ' where h is height.'],
+      ['BFS with a queue when the question is level-by-level.']
+    ],
+    follow: ['“What if the tree is huge / recursion overflows?” → convert to iterative DFS with an explicit stack, or Morris traversal for O(1) space.'],
+    lang: 'Python',
+    tmpl: [
+      ['def dfs(node):', 0],
+      ['    if not node:', 0],
+      ['        return 0                     # base case FIRST — else null crash', 1],
+      ['    left = dfs(node.left)', 0],
+      ['    right = dfs(node.right)', 0],
+      ['    self.best = max(self.best, left + right)   # update global at the node', 1],
+      ['    return 1 + max(left, right)      # return ≠ what you track globally', 1]
+    ],
+    warnNote: 'The value you return upward often differs from the value you track globally (e.g. diameter: return depth, record depth-through-node).',
+    edges: [
+      ['Empty tree (root is null)', ' — base case returns 0/None.'],
+      ['Single node', ' — leaf: left and right both null.'],
+      ['Skewed tree', ' — height h = n, so stack space is O(n); mention it.']
+    ],
+    probs: [
+      ['Diameter of Binary Tree', 'diameter-of-binary-tree', 'E', 'return≠track'],
+      ['Lowest Common Ancestor of a Binary Tree', 'lowest-common-ancestor-of-a-binary-tree', 'M', 'LCA'],
+      ['Binary Tree Level Order Traversal', 'binary-tree-level-order-traversal', 'M', 'BFS-levels'],
+      ['Binary Tree Maximum Path Sum', 'binary-tree-maximum-path-sum', 'H', 'global-max'],
+      ['Validate Binary Search Tree', 'validate-binary-search-tree', 'M', 'bounds'],
+      ['Serialize and Deserialize Binary Tree', 'serialize-and-deserialize-binary-tree', 'H', 'encode'],
+      ['Binary Tree Right Side View', 'binary-tree-right-side-view', 'M', 'BFS-last'],
+      ['Path Sum III', 'path-sum-iii', 'M', 'prefix-sum'],
+      ['Count Good Nodes in Binary Tree', 'count-good-nodes-in-binary-tree', 'M', 'carry-max'],
+      ['Binary Tree Zigzag Level Order Traversal', 'binary-tree-zigzag-level-order-traversal', 'M', 'alt-levels']
+    ]
+  },
+  {
+    id: 'heap', name: 'Heap / Top-K', crux: 'Keep a size-K heap; the root is the boundary element you evict against.',
+    recog: '“top K”, “K largest/smallest”, “K closest”, “median of a stream”, “merge K”',
+    whyRank: '#6: the phrase “top K” should trigger heap before the sentence ends — pure reflex points.',
+    say: [
+      ['“Top K” — I\'ll maintain a ', 'heap of size K', '.'],
+      ['Brute force sorts everything — ', 'O(n log n)', '.'],
+      ['A min-heap of size K keeps the K largest; I push, then pop when size exceeds K — ', 'O(n log K) time, O(K) space', '.'],
+      ['For K largest use a MIN-heap (pop the smallest out); it feels backwards but it\'s right.']
+    ],
+    follow: ['“Better than O(n log K)?” → Quickselect gives O(n) average for a one-shot top-K; heap wins for streaming data.'],
+    lang: 'Python',
+    tmpl: [
+      ['import heapq', 0],
+      ['def top_k(nums, k):', 0],
+      ['    heap = []', 0],
+      ['    for n in nums:', 0],
+      ['        heapq.heappush(heap, n)', 0],
+      ['        if len(heap) > k:            # MIN-heap for K LARGEST (evict min)', 1],
+      ['            heapq.heappop(heap)', 0],
+      ['    return heap                      # size-K, root = k-th largest', 1]
+    ],
+    warnNote: 'K largest → min-heap; K smallest → max-heap (push negatives in Python). Getting this inverted is the classic slip.',
+    edges: [
+      ['K ≥ n', ' — return everything; heap never evicts.'],
+      ['K = 0 or empty input', ' — return [] up front.'],
+      ['Duplicates / ties', ' — clarify whether they count as distinct.']
+    ],
+    probs: [
+      ['Kth Largest Element in an Array', 'kth-largest-element-in-an-array', 'M', 'quickselect'],
+      ['Top K Frequent Elements', 'top-k-frequent-elements', 'M', 'freq-heap'],
+      ['K Closest Points to Origin', 'k-closest-points-to-origin', 'M', 'distance'],
+      ['Find Median from Data Stream', 'find-median-from-data-stream', 'H', 'two-heaps'],
+      ['Merge k Sorted Lists', 'merge-k-sorted-lists', 'H', 'merge-k'],
+      ['Task Scheduler', 'task-scheduler', 'M', 'greedy-heap'],
+      ['Top K Frequent Words', 'top-k-frequent-words', 'M', 'tie-break'],
+      ['Reorganize String', 'reorganize-string', 'M', 'max-heap'],
+      ['Kth Smallest Element in a Sorted Matrix', 'kth-smallest-element-in-a-sorted-matrix', 'M', 'heap/bsearch'],
+      ['Find K Pairs with Smallest Sums', 'find-k-pairs-with-smallest-sums', 'M', 'k-way merge']
+    ]
+  },
+  {
+    id: 'topo-sort', name: 'Topological Sort', crux: 'Order a DAG by dependencies; BFS on in-degree or DFS post-order.',
+    recog: '“order such that…”, “prerequisites”, “build order”, “dependencies”, “can you finish”',
+    whyRank: '#7: dependency-ordering questions recur; also the cleanest way to prove a cycle exists.',
+    say: [
+      ['This is dependency ordering on a DAG — ', 'topological sort', '.'],
+      ['Naive is trying permutations — ', 'exponential', '.'],
+      ['I\'ll use Kahn\'s algorithm: compute in-degrees, queue the zero-in-degree nodes, and peel them off — ', 'O(V+E) time, O(V) space', '.'],
+      ['If I can\'t place all V nodes, there\'s a cycle → no valid order.']
+    ],
+    follow: ['“Detect the cycle / is it even possible?” → if the output length < number of nodes, a cycle exists; that same check answers “can you finish”.'],
+    lang: 'Python',
+    tmpl: [
+      ['from collections import deque', 0],
+      ['def topo(n, edges):', 0],
+      ['    indeg = [0]*n; adj = [[] for _ in range(n)]', 0],
+      ['    for u, v in edges:               # edge u→v means u before v', 1],
+      ['        adj[u].append(v); indeg[v] += 1', 0],
+      ['    q = deque(i for i in range(n) if indeg[i] == 0)', 0],
+      ['    order = []', 0],
+      ['    while q:', 0],
+      ['        u = q.popleft(); order.append(u)', 0],
+      ['        for v in adj[u]:', 0],
+      ['            indeg[v] -= 1', 0],
+      ['            if indeg[v] == 0: q.append(v)   # enqueue only at zero', 1],
+      ['    return order if len(order) == n else []  # != n means cycle', 1]
+    ],
+    warnNote: 'Get the edge direction right (u→v = u before v), and the len(order)==n check is what detects the cycle.',
+    edges: [
+      ['Cycle present', ' — return [] / false; state this is the whole point.'],
+      ['Disconnected DAG', ' — all zero-in-degree nodes seed the queue.'],
+      ['No edges', ' — every node is independent; any order works.']
+    ],
+    probs: [
+      ['Course Schedule', 'course-schedule', 'M', 'can-finish'],
+      ['Course Schedule II', 'course-schedule-ii', 'M', 'return-order'],
+      ['Alien Dictionary', 'alien-dictionary', 'H', 'derive-edges'],
+      ['Minimum Height Trees', 'minimum-height-trees', 'M', 'peel-leaves'],
+      ['Parallel Courses', 'parallel-courses', 'M', 'level-count'],
+      ['Sequence Reconstruction', 'sequence-reconstruction', 'M', 'unique-order'],
+      ['Find Eventual Safe States', 'find-eventual-safe-states', 'M', 'reverse-topo'],
+      ['Sort Items by Groups Respecting Dependencies', 'sort-items-by-groups-respecting-dependencies', 'H', 'nested-topo'],
+      ['Build a Matrix With Conditions', 'build-a-matrix-with-conditions', 'H', 'row+col topo'],
+      ['Course Schedule IV', 'course-schedule-iv', 'M', 'reachability']
+    ]
+  },
+  {
+    id: 'two-pointers', name: 'Two Pointers', crux: 'Sorted input: converge two ends, or fast/slow to detect cycles.',
+    recog: '“sorted array”, “pair that sums to”, “remove duplicates in place”, “palindrome”',
+    whyRank: '#8: fast, high-frequency warm-up; expected to be near-instant so it doesn\'t eat clock.',
+    say: [
+      ['Input is sorted (or I can sort it) — ', 'two pointers from both ends', '.'],
+      ['Brute force checks every pair — ', 'O(n²)', '.'],
+      ['I move left/right inward based on the sum vs target — one linear pass, ', 'O(n) time, O(1) space', ' after sorting.'],
+      ['For dedupe or cycle detection I use fast/slow pointers instead.']
+    ],
+    follow: ['“What if it\'s not sorted and you can\'t sort?” → fall back to a hashmap for O(n) time / O(n) space (the Two Sum trade).'],
+    lang: 'Python',
+    tmpl: [
+      ['def two_sum_sorted(nums, target):', 0],
+      ['    l, r = 0, len(nums) - 1', 0],
+      ['    while l < r:                     # strict <, never l <= r here', 1],
+      ['        s = nums[l] + nums[r]', 0],
+      ['        if s == target: return [l, r]', 0],
+      ['        if s < target: l += 1        # too small → raise the floor', 0],
+      ['        else: r -= 1', 0],
+      ['    return []', 0]
+    ],
+    warnNote: 'Loop while l < r (not ≤), and after finding/skipping remember to advance past duplicates in 3Sum-style problems.',
+    edges: [
+      ['Fewer than 2 elements', ' — return [] immediately.'],
+      ['Duplicate values', ' — skip equal neighbors to avoid repeat triples.'],
+      ['No valid pair', ' — pointers cross, return empty.']
+    ],
+    probs: [
+      ['Two Sum II - Input Array Is Sorted', 'two-sum-ii-input-array-is-sorted', 'M', 'converge'],
+      ['3Sum', '3sum', 'M', 'skip-dupes'],
+      ['Container With Most Water', 'container-with-most-water', 'M', 'greedy-move'],
+      ['Trapping Rain Water', 'trapping-rain-water', 'H', 'two-max'],
+      ['Valid Palindrome', 'valid-palindrome', 'E', 'symmetric'],
+      ['Linked List Cycle', 'linked-list-cycle', 'E', 'fast-slow'],
+      ['Sort Colors', 'sort-colors', 'M', 'dutch-flag'],
+      ['Move Zeroes', 'move-zeroes', 'E', 'in-place'],
+      ['Remove Duplicates from Sorted Array', 'remove-duplicates-from-sorted-array', 'E', 'slow-fast'],
+      ['4Sum', '4sum', 'M', 'nested-pointers']
+    ]
+  },
+  {
+    id: 'dp', name: 'Dynamic Programming', crux: 'Define state, write the recurrence, memoize — overlapping subproblems.',
+    recog: '“number of ways”, “min/max cost”, “can you reach”, “longest … subsequence”',
+    whyRank: '#9: high-signal but time-expensive — practiced state-definition keeps you from stalling.',
+    say: [
+      ['This has optimal substructure and overlapping subproblems — ', 'dynamic programming', '.'],
+      ['Naive recursion recomputes the same states — ', 'exponential, O(2ⁿ)', '.'],
+      ['I define the state as ', '<state here>', ', write the recurrence, and memoize — brings it to ', 'O(states × transitions)', '.'],
+      ['I\'ll start top-down for clarity, then note the bottom-up table and space optimization.']
+    ],
+    follow: ['“Can you reduce the space?” → if each row only depends on the previous row, roll two 1-D arrays (or one) → O(n) or O(1) space.'],
+    lang: 'Python',
+    tmpl: [
+      ['from functools import lru_cache', 0],
+      ['def solve(nums):', 0],
+      ['    @lru_cache(None)                 # memo is what kills the exponent', 1],
+      ['    def dp(i):', 0],
+      ['        if i >= len(nums):', 0],
+      ['            return 0                 # base case defines the recurrence', 1],
+      ['        take = nums[i] + dp(i + 2)   # define state = index i, cleanly', 1],
+      ['        skip = dp(i + 1)', 0],
+      ['        return max(take, skip)', 0],
+      ['    return dp(0)', 0]
+    ],
+    warnNote: 'Nail the state definition and base case first — a fuzzy state is why DP goes wrong; the recurrence follows from it.',
+    edges: [
+      ['Empty input', ' — base case returns 0/identity.'],
+      ['Single element', ' — verify the recurrence handles n=1.'],
+      ['Negative numbers / zeros', ' — decide if they change the optimal (e.g. max product).']
+    ],
+    probs: [
+      ['House Robber', 'house-robber', 'M', 'take/skip'],
+      ['Coin Change', 'coin-change', 'M', 'unbounded'],
+      ['Longest Increasing Subsequence', 'longest-increasing-subsequence', 'M', 'LIS'],
+      ['Word Break', 'word-break', 'M', 'partition'],
+      ['Edit Distance', 'edit-distance', 'H', '2D-grid'],
+      ['Maximum Product Subarray', 'maximum-product-subarray', 'M', 'min/max'],
+      ['Decode Ways', 'decode-ways', 'M', 'count-ways'],
+      ['Unique Paths', 'unique-paths', 'M', 'grid-count'],
+      ['Longest Common Subsequence', 'longest-common-subsequence', 'M', 'LCS'],
+      ['Partition Equal Subset Sum', 'partition-equal-subset-sum', 'M', '0/1-knapsack']
+    ]
+  },
+  {
+    id: 'binary-search-answer', name: 'Binary Search on Answer', crux: 'Binary-search the answer space; a monotonic feasibility check picks the half.',
+    recog: '“minimum largest / maximum smallest”, “smallest capacity/speed such that…”, “within D days”',
+    whyRank: '#10: Google loves the disguised version; spotting the monotonic predicate is the whole battle.',
+    say: [
+      ['The answer is monotonic — if a value works, everything larger (or smaller) does too — so I\'ll ', 'binary-search on the answer', '.'],
+      ['Brute force tries every candidate value — ', 'O(range × n)', '.'],
+      ['I binary-search the value range and run a ', 'feasible(mid)', ' check each step — ', 'O(n log(range)) time, O(1) space', '.'],
+      ['The insight is that feasibility flips exactly once across the range.']
+    ],
+    follow: ['“How do you know it\'s monotonic?” → argue that raising the limit can only make the check easier — that monotonicity is what licenses binary search.'],
+    lang: 'Python',
+    tmpl: [
+      ['def min_feasible(lo, hi):', 0],
+      ['    while lo < hi:                   # < not <=; converges to the answer', 1],
+      ['        mid = (lo + hi) // 2', 0],
+      ['        if feasible(mid):', 0],
+      ['            hi = mid                 # mid may BE the answer — keep it', 1],
+      ['        else:', 0],
+      ['            lo = mid + 1', 0],
+      ['    return lo                        # lo == hi == smallest feasible', 1]
+    ],
+    warnNote: 'Set lo/hi to the real value range (not indices), and use hi = mid (not mid−1) when mid can be the answer — off-by-one here loops forever.',
+    edges: [
+      ['lo == hi at start', ' — single candidate; loop exits immediately.'],
+      ['Answer at a boundary', ' — verify the min/max value passes feasible().'],
+      ['feasible() itself wrong', ' — dry-run it; it\'s the usual bug source.']
+    ],
+    probs: [
+      ['Koko Eating Bananas', 'koko-eating-bananas', 'M', 'min-speed'],
+      ['Capacity To Ship Packages Within D Days', 'capacity-to-ship-packages-within-d-days', 'M', 'min-capacity'],
+      ['Split Array Largest Sum', 'split-array-largest-sum', 'H', 'min-max'],
+      ['Minimum Number of Days to Make m Bouquets', 'minimum-number-of-days-to-make-m-bouquets', 'M', 'min-days'],
+      ['Find the Smallest Divisor Given a Threshold', 'find-the-smallest-divisor-given-a-threshold', 'M', 'divisor'],
+      ['Median of Two Sorted Arrays', 'median-of-two-sorted-arrays', 'H', 'partition'],
+      ['Find Peak Element', 'find-peak-element', 'M', 'slope'],
+      ['Search in Rotated Sorted Array', 'search-in-rotated-sorted-array', 'M', 'pivot'],
+      ['Minimize Max Distance to Gas Station', 'minimize-max-distance-to-gas-station', 'H', 'real-valued'],
+      ['Magnetic Force Between Two Balls', 'magnetic-force-between-two-balls', 'M', 'max-min-gap']
+    ]
+  },
+  {
+    id: 'backtracking', name: 'Backtracking', crux: 'Choose → recurse → un-choose; prune branches that can\'t win.',
+    recog: '“all combinations / permutations / subsets”, “generate every…”, “N-Queens”, “sudoku”',
+    whyRank: '#11: the template is fixed — internalize choose/un-choose so you write it without thinking.',
+    say: [
+      ['I need to enumerate all solutions — this is ', 'backtracking', '.'],
+      ['It\'s inherently exponential — ', 'O(branches^depth)', ' — there\'s no polynomial escape.'],
+      ['I build the choice tree with choose → recurse → un-choose, and ', 'prune invalid branches early', ' to cut the constant.'],
+      ['Sort first to skip duplicates cleanly when the input has repeats.']
+    ],
+    follow: ['“Too slow — can you prune harder?” → add constraint checks before recursing (e.g. N-Queens diagonal sets) so dead branches die immediately.'],
+    lang: 'Python',
+    tmpl: [
+      ['def subsets(nums):', 0],
+      ['    res, path = [], []', 0],
+      ['    def bt(start):', 0],
+      ['        res.append(path[:])          # copy path — appending the ref aliases', 1],
+      ['        for i in range(start, len(nums)):', 0],
+      ['            path.append(nums[i])', 0],
+      ['            bt(i + 1)                # i+1 (not start+1) avoids reuse', 1],
+      ['            path.pop()               # un-choose — the backtrack step', 1],
+      ['    bt(0)', 0],
+      ['    return res', 0]
+    ],
+    warnNote: 'Append a COPY path[:] (not path — it\'s mutated later), and recurse with i+1 to avoid reusing the same element.',
+    edges: [
+      ['Empty input', ' — the empty subset/permutation is still valid output.'],
+      ['Duplicates in input', ' — sort + skip nums[i]==nums[i-1] to dedupe.'],
+      ['Result must be copied', ' — forgetting path[:] gives all-empty lists.']
+    ],
+    probs: [
+      ['Subsets', 'subsets', 'M', 'power-set'],
+      ['Permutations', 'permutations', 'M', 'used-set'],
+      ['Combination Sum', 'combination-sum', 'M', 'reuse-ok'],
+      ['Word Search', 'word-search', 'M', 'grid-DFS'],
+      ['N-Queens', 'n-queens', 'H', 'prune'],
+      ['Palindrome Partitioning', 'palindrome-partitioning', 'M', 'cut-points'],
+      ['Letter Combinations of a Phone Number', 'letter-combinations-of-a-phone-number', 'M', 'digit-map'],
+      ['Generate Parentheses', 'generate-parentheses', 'M', 'valid-prune'],
+      ['Combinations', 'combinations', 'M', 'k-of-n'],
+      ['Sudoku Solver', 'sudoku-solver', 'H', 'constraint']
+    ]
+  },
+  {
+    id: 'union-find', name: 'Union-Find', crux: 'Merge sets with union-by-rank + path compression; near-O(1) connectivity.',
+    recog: '“connected components”, “are X and Y in the same group”, “number of groups”, “redundant edge”',
+    whyRank: '#12: niche but decisive — when it fits, it\'s the shortest correct answer on the board.',
+    say: [
+      ['This is dynamic connectivity — ', 'Union-Find (disjoint set union)', '.'],
+      ['Re-running BFS/DFS per query is ', 'O(V+E) each — too slow for many queries', '.'],
+      ['With path compression and union by rank, find/union are ', 'effectively O(α(n)) ≈ O(1)', '.'],
+      ['The component count = number of distinct roots after all unions.']
+    ],
+    follow: ['“Detect a cycle in an undirected graph?” → if union(u,v) finds them already in the same set, that edge closes a cycle.'],
+    lang: 'Python',
+    tmpl: [
+      ['def find(x):', 0],
+      ['    while parent[x] != x:', 0],
+      ['        parent[x] = parent[parent[x]]   # path compression, the speed', 1],
+      ['        x = parent[x]', 0],
+      ['    return x', 0],
+      ['def union(a, b):', 0],
+      ['    ra, rb = find(a), find(b)', 0],
+      ['    if ra == rb: return False        # already joined → cycle edge', 1],
+      ['    parent[ra] = rb; return True', 0]
+    ],
+    warnNote: 'Always union by ROOTS (find(a), find(b)) — unioning raw nodes corrupts the forest; path compression is what buys the speed.',
+    edges: [
+      ['Self-union union(x,x)', ' — roots equal, no-op; don\'t miscount.'],
+      ['Already-connected pair', ' — returns false; that\'s your cycle signal.'],
+      ['Component count init', ' — starts at n, decrement on each successful union.']
+    ],
+    probs: [
+      ['Number of Provinces', 'number-of-provinces', 'M', 'count-groups'],
+      ['Redundant Connection', 'redundant-connection', 'M', 'cycle-edge'],
+      ['Accounts Merge', 'accounts-merge', 'M', 'merge-by-key'],
+      ['Number of Connected Components in an Undirected Graph', 'number-of-connected-components-in-an-undirected-graph', 'M', 'components'],
+      ['Graph Valid Tree', 'graph-valid-tree', 'M', 'tree-check'],
+      ['Most Stones Removed with Same Row or Column', 'most-stones-removed-with-same-row-or-column', 'M', 'grid-union'],
+      ['Satisfiability of Equality Equations', 'satisfiability-of-equality-equations', 'M', 'eq/neq'],
+      ['Number of Operations to Make Network Connected', 'number-of-operations-to-make-network-connected', 'M', 'spare-edges'],
+      ['Smallest String With Swaps', 'smallest-string-with-swaps', 'M', 'group-sort'],
+      ['Number of Islands II', 'number-of-islands-ii', 'H', 'dynamic-union']
+    ]
+  },
+  {
+    id: 'trie', name: 'Trie', crux: 'Character tree with an end flag; prefix queries in O(word length).',
+    recog: '“prefix”, “starts with”, “autocomplete”, “dictionary of words”, “search word with .”',
+    whyRank: '#13: single-purpose but unmistakable — the word “prefix” is the tell; build it cold.',
+    say: [
+      ['Prefix queries over many words — this is a ', 'trie (prefix tree)', '.'],
+      ['Scanning every word per query is ', 'O(N × L)', '.'],
+      ['A trie makes insert and prefix-search ', 'O(L) in the word length', ', independent of dictionary size — ', 'O(total chars) space', '.'],
+      ['I mark an is_end flag so a prefix isn\'t mistaken for a full word.']
+    ],
+    follow: ['“Support wildcard \".\" search?” → at a \".\" node, DFS into all children instead of one — the trie handles branching search naturally.'],
+    lang: 'Python',
+    tmpl: [
+      ['class Trie:', 0],
+      ['    def __init__(self):', 0],
+      ['        self.root = {}', 0],
+      ['    def insert(self, word):', 0],
+      ['        node = self.root', 0],
+      ['        for ch in word:', 0],
+      ['            node = node.setdefault(ch, {})   # setdefault = create-or-walk', 1],
+      ['        node[\'#\'] = True             # end marker: prefix != full word', 1]
+    ],
+    warnNote: 'Use a distinct end marker (\'#\'/is_end) so a stored prefix isn\'t reported as a complete word; setdefault both creates and descends.',
+    edges: [
+      ['Empty string insert/search', ' — decide if the root itself is a word.'],
+      ['Word that is a prefix of another', ' — the end flag disambiguates.'],
+      ['Search for missing prefix', ' — bail the moment a char is absent.']
+    ],
+    probs: [
+      ['Implement Trie (Prefix Tree)', 'implement-trie-prefix-tree', 'M', 'build'],
+      ['Design Add and Search Words Data Structure', 'design-add-and-search-words-data-structure', 'M', 'wildcard'],
+      ['Word Search II', 'word-search-ii', 'H', 'trie+DFS'],
+      ['Replace Words', 'replace-words', 'M', 'shortest-root'],
+      ['Longest Word in Dictionary', 'longest-word-in-dictionary', 'M', 'buildable'],
+      ['Maximum XOR of Two Numbers in an Array', 'maximum-xor-of-two-numbers-in-an-array', 'M', 'bit-trie'],
+      ['Design Search Autocomplete System', 'design-search-autocomplete-system', 'H', 'autocomplete'],
+      ['Map Sum Pairs', 'map-sum-pairs', 'M', 'prefix-sum'],
+      ['Word Break II', 'word-break-ii', 'H', 'trie+DFS'],
+      ['Concatenated Words', 'concatenated-words', 'H', 'trie+DP']
+    ]
+  },
+  {
+    id: 'prefix-sum', name: 'Prefix Sum', crux: 'Precompute running totals; any range sum is a subtraction. Pair with a hashmap for subarray counts.',
+    recog: '“sum of subarray”, “range sum query”, “subarray sums to K”, “equal … on both sides”',
+    whyRank: '#14: cheap and mechanical, but the hashmap variant (“sum equals K”) trips people — drill that combo.',
+    say: [
+      ['Range-sum problem — I\'ll build a ', 'prefix-sum array', ' so any range is prefix[j] − prefix[i].'],
+      ['Recomputing each range sum is ', 'O(n) per query, O(n²) overall', '.'],
+      ['With prefix sums each query is ', 'O(1) after O(n) preprocessing', '.'],
+      ['For “count subarrays summing to K”, I store prefix-sum frequencies in a hashmap and look for prefix − K — one pass, O(n).']
+    ],
+    follow: ['“Count subarrays that sum to K?” → running prefix sum + hashmap of seen sums; add count[prefix − K] each step — O(n) time/space.'],
+    lang: 'Python',
+    tmpl: [
+      ['def subarray_sum_k(nums, k):', 0],
+      ['    count = {0: 1}                   # seed {0:1} — the empty prefix!', 1],
+      ['    prefix = res = 0', 0],
+      ['    for n in nums:', 0],
+      ['        prefix += n', 0],
+      ['        res += count.get(prefix - k, 0)   # look BEFORE inserting current', 1],
+      ['        count[prefix] = count.get(prefix, 0) + 1', 0],
+      ['    return res', 0]
+    ],
+    warnNote: 'Seed the map with {0:1} (the empty prefix) and query prefix−k BEFORE inserting the current prefix — reversing those double-counts.',
+    edges: [
+      ['Empty array', ' — return 0.'],
+      ['Negative numbers', ' — prefix sums still work (unlike sliding window here).'],
+      ['K = 0 / whole-array match', ' — the {0:1} seed is what catches these.']
+    ],
+    probs: [
+      ['Subarray Sum Equals K', 'subarray-sum-equals-k', 'M', 'hashmap'],
+      ['Range Sum Query - Immutable', 'range-sum-query-immutable', 'E', 'precompute'],
+      ['Product of Array Except Self', 'product-of-array-except-self', 'M', 'prefix×suffix'],
+      ['Find Pivot Index', 'find-pivot-index', 'E', 'balance'],
+      ['Contiguous Array', 'contiguous-array', 'M', '0/1-balance'],
+      ['Continuous Subarray Sum', 'continuous-subarray-sum', 'M', 'mod-map'],
+      ['Range Sum Query 2D - Immutable', 'range-sum-query-2d-immutable', 'M', '2D-prefix'],
+      ['Maximum Size Subarray Sum Equals k', 'maximum-size-subarray-sum-equals-k', 'M', 'first-seen'],
+      ['Subarray Sums Divisible by K', 'subarray-sums-divisible-by-k', 'M', 'mod-count'],
+      ['Number of Submatrices That Sum to Target', 'number-of-submatrices-that-sum-to-target', 'H', '2D+hashmap']
+    ]
+  }
+];
+</script>
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const el = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
+  const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const DIFF_NAME = { E: 'Easy', M: 'Medium', H: 'Hard' };
+
+  // ---- Build sayscript / template line into HTML ----
+  const sayLine = seg => {
+    // seg = [before, highlight?, after?]  -> highlight rendered <b>, complexity spans get .cx if it looks like O(...)
+    const [a, b, c] = seg;
+    if (b == null) return `<li>${esc(a)}</li>`;
+    const isCx = /O\(|exponential/i.test(b);
+    return `<li>${esc(a)}<b class="${isCx ? 'cx' : ''}">${esc(b)}</b>${c ? esc(c) : ''}</li>`;
+  };
+  const tmplLine = ([code, warn]) => warn ? `<span class="warn">${esc(code)}</span>` : esc(code);
+
+  // ---- Build cards ----
+  const cardsWrap = $('#cards');
+  PATTERNS.forEach((p, ci) => {
+    const card = el('div', 'card'); card.dataset.pid = p.id;
+    card.style.animationDelay = Math.min(ci, 12) * 26 + 'ms';
+
+    const head = el('div', 'head');
+    head.innerHTML = `
+      <span class="pnum">${ci + 1}</span>
+      <span class="ptitle">
+        <div class="r1"><h3>${esc(p.name)}</h3></div>
+        <span class="crux"><span class="crux-k">CRUX</span>${esc(p.crux)}</span>
+        <span class="recog10"><span class="r-k">10-SEC</span><em>${esc(p.recog)}</em></span>
+        <span class="whyrank">${esc(p.whyRank)}</span>
+      </span>
+      <span class="caret"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>`;
+    head.addEventListener('click', () => card.classList.toggle('open'));
+    card.appendChild(head);
+
+    const body = el('div', 'body');
+    body.innerHTML = `
+      <div class="section say">
+        <div class="lbl">Say it out loud — before you code</div>
+        <ul class="sayscript">${p.say.map(sayLine).join('')}</ul>
+      </div>
+      <div class="section follow">
+        <div class="lbl">Optimize follow-up · “can you do better?”</div>
+        ${p.follow.map(f => { const i = f.indexOf('→'); return `<div class="followbox"><div class="q">${esc(f.slice(0, i))}</div><div class="a">${esc(f.slice(i + 1).trim())}</div></div>`; }).join('')}
+      </div>
+      <div class="section tmpl">
+        <div class="lbl">Skeleton · ${esc(p.lang)}</div>
+        <pre><code>${p.tmpl.map(tmplLine).join('\n')}</code></pre>
+        <div class="warnnote">${esc(p.warnNote)}</div>
+      </div>
+      <div class="section edge">
+        <div class="lbl">Edge cases to volunteer — unprompted</div>
+        <ul class="edgelist">${p.edges.map(([b, rest]) => `<li><b>${esc(b)}</b>${esc(rest)}</li>`).join('')}</ul>
+      </div>
+      <div class="section">
+        <div class="lbl" style="color:var(--txt-2)">Anchor problems</div>
+        <table class="ptable"><tbody>
+          ${p.probs.map(([name, slug, diff, tag]) => `
+            <tr>
+              <td class="pname"><a href="${LC}${slug}" target="_blank" rel="noopener">${esc(name)}</a></td>
+              <td style="width:60px"><span class="diff ${diff}" title="${DIFF_NAME[diff]}">${diff}</span></td>
+              <td class="col-v" style="width:140px;text-align:right"><span class="vtag">${esc(tag)}</span></td>
+            </tr>`).join('')}
+        </tbody></table>
+      </div>`;
+    card.appendChild(body);
+    cardsWrap.appendChild(card);
+  });
+
+  // ---- Sidebar nav ----
+  const navlist = $('#navlist');
+  PATTERNS.forEach((p, i) => {
+    const a = el('a', 'navitem'); a.href = '#'; a.dataset.pid = p.id;
+    a.innerHTML = `<span class="row1"><span class="rank">${i + 1}</span><span class="nm">${esc(p.name)}</span></span>`;
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const card = cardsWrap.querySelector(`.card[data-pid="${p.id}"]`);
+      card.classList.add('open');
+      card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      document.body.classList.remove('nav-open');
+    });
+    navlist.appendChild(a);
+  });
+
+  // ---- Scroll-spy ----
+  const spy = new IntersectionObserver(entries => {
+    const vis = entries.filter(e => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+    if (!vis) return;
+    navlist.querySelectorAll('.navitem').forEach(n => {
+      const on = n.dataset.pid === vis.target.dataset.pid;
+      n.classList.toggle('active', on);
+      if (on) n.scrollIntoView({ block: 'nearest' });
+    });
+  }, { rootMargin: '-76px 0px -60% 0px', threshold: 0 });
+  cardsWrap.querySelectorAll('.card').forEach(c => spy.observe(c));
+
+  // ---- Recognition Trainer (in-memory only) ----
+  const bank = [];
+  PATTERNS.forEach(p => p.probs.forEach(([name, slug, diff]) =>
+    bank.push({ name, first: recogSentence(name), pattern: p.name })));
+
+  // A short "first sentence" cue per problem, hiding the pattern.
+  function recogSentence(name) {
+    const M = {
+      'Number of Islands': 'Given a 2D grid of 1s (land) and 0s (water), count the distinct landmasses.',
+      'Rotting Oranges': 'In a grid of fresh and rotten oranges, find the minutes until no fresh orange remains.',
+      'Word Ladder': 'Transform one word into another changing one letter at a time, each step a real word — shortest count?',
+      'Clone Graph': 'Return a deep copy of a connected undirected graph given a node reference.',
+      'Pacific Atlantic Water Flow': 'Find cells in a height grid from which water can flow to both the top-left and bottom-right oceans.',
+      'Course Schedule': 'Given prerequisite pairs, decide whether you can finish all courses.',
+      'Longest Substring Without Repeating Characters': 'Find the length of the longest substring with no repeated character.',
+      'Minimum Window Substring': 'Find the smallest window in S that contains every character of T.',
+      'Longest Repeating Character Replacement': 'You may replace up to k characters; find the longest run of one repeated letter.',
+      'Permutation in String': 'Decide whether one string contains any permutation of another as a substring.',
+      'Subarrays with K Different Integers': 'Count subarrays containing exactly K distinct integers.',
+      'Fruit Into Baskets': 'Pick the longest run of trees using at most two fruit types.',
+      'Merge Intervals': 'Given a list of intervals, merge all that overlap.',
+      'Insert Interval': 'Insert a new interval into a sorted non-overlapping list and merge as needed.',
+      'Non-overlapping Intervals': 'Remove the fewest intervals so the rest don\'t overlap.',
+      'Meeting Rooms II': 'Given meeting start/end times, find the minimum number of rooms required.',
+      'Interval List Intersections': 'Return the intersection of two lists of sorted intervals.',
+      'My Calendar I': 'Book events, rejecting any that would double-book a time.',
+      'Daily Temperatures': 'For each day, how many days until a warmer temperature?',
+      'Next Greater Element II': 'For each element in a circular array, find the next greater element.',
+      'Largest Rectangle in Histogram': 'Find the largest rectangle that fits under a histogram\'s bars.',
+      'Trapping Rain Water': 'Given bar heights, compute how much rainwater is trapped between them.',
+      'Sum of Subarray Minimums': 'Sum the minimum of every contiguous subarray.',
+      'Remove K Digits': 'Remove k digits from a number to make it as small as possible.',
+      'Diameter of Binary Tree': 'Find the longest path between any two nodes in a binary tree.',
+      'Lowest Common Ancestor of a Binary Tree': 'Find the lowest node that has two given nodes as descendants.',
+      'Binary Tree Level Order Traversal': 'Return a binary tree\'s node values grouped level by level.',
+      'Binary Tree Maximum Path Sum': 'Find the maximum sum along any path in a binary tree.',
+      'Validate Binary Search Tree': 'Decide whether a binary tree satisfies the BST ordering property.',
+      'Serialize and Deserialize Binary Tree': 'Encode a binary tree to a string and reconstruct it.',
+      'Kth Largest Element in an Array': 'Find the k-th largest element in an unsorted array.',
+      'Top K Frequent Elements': 'Return the k most frequent elements in an array.',
+      'K Closest Points to Origin': 'Return the k points nearest the origin.',
+      'Find Median from Data Stream': 'Support adding numbers and querying the running median at any time.',
+      'Merge k Sorted Lists': 'Merge k sorted linked lists into one sorted list.',
+      'Task Scheduler': 'Schedule tasks with a cooldown so the total time is minimized.',
+      'Course Schedule II': 'Return a valid order to take all courses given prerequisites.',
+      'Alien Dictionary': 'Given words sorted in an alien language, derive the letter order.',
+      'Minimum Height Trees': 'Find the roots that give a tree of minimum height.',
+      'Parallel Courses': 'Find the minimum semesters to finish all courses taken in parallel.',
+      'Sequence Reconstruction': 'Decide whether a sequence is uniquely reconstructible from subsequences.',
+      'Two Sum II - Input Array Is Sorted': 'In a sorted array, find two numbers that add to a target.',
+      '3Sum': 'Find all unique triplets in an array that sum to zero.',
+      'Container With Most Water': 'Given vertical lines, find two that hold the most water.',
+      'Valid Palindrome': 'Decide whether a string reads the same forwards and backwards, ignoring non-alphanumerics.',
+      'Linked List Cycle': 'Decide whether a linked list contains a cycle.',
+      'House Robber': 'Maximize loot from houses in a row without robbing two adjacent ones.',
+      'Coin Change': 'Find the fewest coins that make up a target amount.',
+      'Longest Increasing Subsequence': 'Find the length of the longest strictly increasing subsequence.',
+      'Word Break': 'Decide whether a string can be segmented into dictionary words.',
+      'Edit Distance': 'Find the minimum edits to turn one word into another.',
+      'Maximum Product Subarray': 'Find the contiguous subarray with the largest product.',
+      'Koko Eating Bananas': 'Find the slowest eating speed to finish all bananas within h hours.',
+      'Capacity To Ship Packages Within D Days': 'Find the least ship capacity to deliver all packages within D days.',
+      'Split Array Largest Sum': 'Split an array into m parts minimizing the largest part\'s sum.',
+      'Minimum Number of Days to Make m Bouquets': 'Find the fewest days to make m bouquets from blooming flowers.',
+      'Find the Smallest Divisor Given a Threshold': 'Find the smallest divisor so the sum of divisions stays under a threshold.',
+      'Median of Two Sorted Arrays': 'Find the median of two sorted arrays in logarithmic time.',
+      'Subsets': 'Return all possible subsets of a set of distinct integers.',
+      'Permutations': 'Return all possible orderings of a list of distinct integers.',
+      'Combination Sum': 'Find all combinations that sum to a target, reusing numbers allowed.',
+      'Word Search': 'Decide whether a word can be traced through adjacent grid cells.',
+      'N-Queens': 'Place N queens on an N×N board so none attack each other.',
+      'Palindrome Partitioning': 'Partition a string so every piece is a palindrome — list all ways.',
+      'Number of Provinces': 'Given a connectivity matrix of cities, count the provinces.',
+      'Redundant Connection': 'Find the edge that, when removed, turns a graph back into a tree.',
+      'Accounts Merge': 'Merge accounts that share any email address.',
+      'Number of Connected Components in an Undirected Graph': 'Count the connected components in an undirected graph.',
+      'Graph Valid Tree': 'Decide whether the given edges form a valid tree.',
+      'Most Stones Removed with Same Row or Column': 'Remove the most stones where each shares a row or column with another.',
+      'Implement Trie (Prefix Tree)': 'Design a structure supporting insert, search, and startsWith on words.',
+      'Design Add and Search Words Data Structure': 'Support adding words and searching with \'.\' matching any letter.',
+      'Word Search II': 'Find every dictionary word that can be traced through a letter grid.',
+      'Replace Words': 'Replace each word with the shortest dictionary root that prefixes it.',
+      'Longest Word in Dictionary': 'Find the longest word buildable one character at a time from other words.',
+      'Maximum XOR of Two Numbers in an Array': 'Find the maximum XOR of any two numbers in an array.',
+      'Subarray Sum Equals K': 'Count the contiguous subarrays that sum to exactly k.',
+      'Range Sum Query - Immutable': 'Answer many range-sum queries over a fixed array efficiently.',
+      'Product of Array Except Self': 'Return an array where each entry is the product of all others.',
+      'Find Pivot Index': 'Find the index where the left sum equals the right sum.',
+      'Contiguous Array': 'Find the longest subarray with equal numbers of 0s and 1s.',
+      'Continuous Subarray Sum': 'Decide if a subarray of length ≥2 sums to a multiple of k.',
+      'Shortest Path in Binary Matrix': 'Find the shortest clear path from top-left to bottom-right in a binary grid, moving 8-directionally.',
+      'Walls and Gates': 'Fill each empty room in a grid with the distance to its nearest gate.',
+      '01 Matrix': 'For each cell in a binary matrix, find the distance to the nearest 0.',
+      'Surrounded Regions': 'Capture all regions of \'O\' fully surrounded by \'X\' on a board.',
+      'Word Ladder II': 'Return every shortest transformation sequence from one word to another, one letter at a time.',
+      'Find All Anagrams in a String': 'Find all start indices where an anagram of one string appears in another.',
+      'Sliding Window Maximum': 'Return the maximum in every window of size k as it slides across the array.',
+      'Longest Substring with At Most K Distinct Characters': 'Find the longest substring containing at most k distinct characters.',
+      'Minimum Size Subarray Sum': 'Find the shortest contiguous subarray whose sum is at least a target.',
+      'Meeting Rooms': 'Given meeting time intervals, decide whether a person can attend all of them.',
+      'Employee Free Time': 'Given each employee\'s busy intervals, find the common free time for everyone.',
+      'Car Pooling': 'Given pickup/dropoff trips and a car capacity, decide if all passengers fit.',
+      'Minimum Number of Arrows to Burst Balloons': 'Find the fewest arrows to burst all balloons given their horizontal spans.',
+      'Binary Tree Right Side View': 'Return the values visible when looking at a binary tree from the right side.',
+      'Path Sum III': 'Count the paths in a binary tree summing to a target, starting and ending anywhere.',
+      'Count Good Nodes in Binary Tree': 'Count nodes with no larger value on the path from the root to them.',
+      'Binary Tree Zigzag Level Order Traversal': 'Return a binary tree\'s values level by level, alternating direction each level.',
+      'Top K Frequent Words': 'Return the k most frequent words, ties broken alphabetically.',
+      'Reorganize String': 'Rearrange a string so no two adjacent characters are the same.',
+      'Kth Smallest Element in a Sorted Matrix': 'Find the k-th smallest element in a row- and column-sorted matrix.',
+      'Find K Pairs with Smallest Sums': 'Find the k pairs (one from each array) with the smallest sums.',
+      'Find Eventual Safe States': 'Find all nodes from which every path leads to a terminal node.',
+      'Sort Items by Groups Respecting Dependencies': 'Order items respecting both item and group dependencies.',
+      'Build a Matrix With Conditions': 'Build a matrix placing numbers to satisfy given row and column orderings.',
+      'Course Schedule IV': 'Answer whether one course is a prerequisite of another for many queries.',
+      'Sort Colors': 'Sort an array of 0s, 1s, and 2s in place in one pass.',
+      'Move Zeroes': 'Move all zeros to the end of an array while keeping the order of the rest.',
+      'Remove Duplicates from Sorted Array': 'Remove duplicates in a sorted array in place and return the new length.',
+      '4Sum': 'Find all unique quadruplets in an array that sum to a target.',
+      'Decode Ways': 'Count the ways to decode a digit string where 1–26 map to letters.',
+      'Unique Paths': 'Count the paths from the top-left to bottom-right of a grid moving only right or down.',
+      'Longest Common Subsequence': 'Find the length of the longest subsequence common to two strings.',
+      'Partition Equal Subset Sum': 'Decide whether an array can be split into two subsets of equal sum.',
+      'Find Peak Element': 'Find any peak element — one greater than its neighbors — in less than linear time.',
+      'Search in Rotated Sorted Array': 'Search for a target in a sorted array that has been rotated at an unknown pivot.',
+      'Minimize Max Distance to Gas Station': 'Add k gas stations to minimize the largest gap between adjacent stations.',
+      'Magnetic Force Between Two Balls': 'Place m balls in baskets to maximize the minimum distance between any two.',
+      'Letter Combinations of a Phone Number': 'Return all letter combinations a phone-keypad digit string could spell.',
+      'Generate Parentheses': 'Generate all combinations of n well-formed pairs of parentheses.',
+      'Combinations': 'Return all combinations of k numbers chosen from 1 to n.',
+      'Sudoku Solver': 'Fill a partially completed 9×9 Sudoku board so it is valid.',
+      'Satisfiability of Equality Equations': 'Decide if a set of == and != equations between variables can all hold.',
+      'Number of Operations to Make Network Connected': 'Find the fewest cable moves to connect all computers, or -1 if impossible.',
+      'Smallest String With Swaps': 'Given allowed index swaps, form the lexicographically smallest string.',
+      'Number of Islands II': 'After each land addition to a grid, report the current number of islands.',
+      'Design Search Autocomplete System': 'Design an autocomplete that suggests top historical sentences by a typed prefix.',
+      'Map Sum Pairs': 'Support inserting key-value pairs and summing values of all keys with a given prefix.',
+      'Word Break II': 'Return every way to segment a string into space-separated dictionary words.',
+      'Concatenated Words': 'Find all words that are formed entirely by concatenating other words in the list.',
+      'Next Greater Element I': 'For each element of one array, find its next greater element in another.',
+      'Maximal Rectangle': 'Find the largest all-1s rectangle in a binary matrix.',
+      'Online Stock Span': 'For a stream of prices, report the span of consecutive days up to today at or below today\'s price.',
+      'Remove Duplicate Letters': 'Remove duplicate letters so each appears once and the result is the smallest in order.',
+      'Range Sum Query 2D - Immutable': 'Answer many rectangle-sum queries over a fixed matrix efficiently.',
+      'Maximum Size Subarray Sum Equals k': 'Find the longest subarray that sums to exactly k.',
+      'Subarray Sums Divisible by K': 'Count the contiguous subarrays whose sum is divisible by k.',
+      'Number of Submatrices That Sum to Target': 'Count the submatrices of a matrix that sum to a target value.'
+    };
+    return M[name] || (name + '.');
+  }
+
+  let recogScore = 0, recogSeen = 0, current = null, revealed = false;
+  const rPrompt = $('#recogPrompt'), rAnswer = $('#recogAnswer');
+  const bReveal = $('#recogReveal'), bRight = $('#recogRight'), bWrong = $('#recogWrong');
+
+  $('#recogNew').addEventListener('click', () => {
+    current = bank[Math.floor(Math.random() * bank.length)];
+    revealed = false;
+    rPrompt.innerHTML = esc(current.first);
+    rAnswer.classList.remove('show');
+    rAnswer.innerHTML = `Pattern: <b>${esc(current.pattern)}</b> &nbsp;·&nbsp; ${esc(current.name)}`;
+    bReveal.disabled = false; bRight.disabled = true; bWrong.disabled = true;
+  });
+  bReveal.addEventListener('click', () => {
+    if (!current) return;
+    revealed = true;
+    rAnswer.classList.add('show');
+    bReveal.disabled = true; bRight.disabled = false; bWrong.disabled = false;
+  });
+  const tally = correct => {
+    if (!current || !revealed) return;
+    recogSeen++; if (correct) recogScore++;
+    $('#recogScore').textContent = recogScore;
+    $('#recogSeen').textContent = recogSeen;
+    bRight.disabled = true; bWrong.disabled = true;
+  };
+  bRight.addEventListener('click', () => tally(true));
+  bWrong.addEventListener('click', () => tally(false));
+
+  // ---- Rehearsal Timer (90s) ----
+  const DURATION = 90;
+  let remaining = DURATION, tick = null;
+  const clock = $('#clock'), tprog = $('#tprog');
+  const fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const paint = () => {
+    clock.textContent = fmt(remaining);
+    tprog.style.width = (remaining / DURATION * 100) + '%';
+    clock.classList.toggle('warn', remaining <= 30 && remaining > 10);
+    clock.classList.toggle('crit', remaining <= 10);
+  };
+  const stop = () => { clearInterval(tick); tick = null; };
+  $('#timerStart').addEventListener('click', function () {
+    if (tick) { stop(); this.textContent = 'Start 90s'; return; }
+    if (remaining === 0) remaining = DURATION;
+    this.textContent = 'Pause';
+    tick = setInterval(() => {
+      remaining--; paint();
+      if (remaining <= 0) { stop(); $('#timerStart').textContent = 'Start 90s'; }
+    }, 1000);
+  });
+  $('#timerReset').addEventListener('click', () => { stop(); remaining = DURATION; paint(); $('#timerStart').textContent = 'Start 90s'; });
+  paint();
+
+  // ---- Mobile nav ----
+  $('#hamburger').addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  $('#scrim').addEventListener('click', () => document.body.classList.remove('nav-open'));
+})();
+</script>
+</body>
+</html>

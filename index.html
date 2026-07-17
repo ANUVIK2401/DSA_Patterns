@@ -42,9 +42,13 @@
   ::-webkit-scrollbar { width: 12px; height: 12px; }
   ::-webkit-scrollbar-thumb { background: #2c2c34; border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
   ::-webkit-scrollbar-thumb:hover { background: #3d3d47; background-clip: content-box; }
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
   @keyframes popIn { 0% { transform: scale(0); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
   @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+  @keyframes slideDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+  @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 10px var(--green-glow); } 50% { box-shadow: 0 0 20px var(--green-glow), 0 0 6px var(--green); } }
+  @keyframes navPop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
 
   /* Layout */
   .app { display: flex; min-height: 100vh; }
@@ -66,6 +70,14 @@
   .brand h1 { font-size: 19px; font-weight: 800; letter-spacing: -.5px; line-height: 1.05;
     background: linear-gradient(90deg, #fff, #cfcfd6); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
   .brand .sub { color: var(--txt-3); font-size: 11px; font-weight: 600; letter-spacing: .2px; }
+  .drilllink { display: flex; align-items: center; gap: 9px; padding: 10px 12px; border-radius: 10px;
+    font-size: 12.5px; font-weight: 700; color: var(--txt); position: relative; overflow: hidden;
+    background: linear-gradient(135deg, rgba(229,9,20,.16), rgba(30,215,96,.06));
+    border: 1px solid rgba(255,43,56,.28); transition: all .18s; }
+  .drilllink span { flex: 1; }
+  .drilllink .arr { color: var(--txt-3); transition: transform .18s; }
+  .drilllink:hover { color: #fff; border-color: var(--red); box-shadow: 0 4px 18px var(--red-glow); transform: translateY(-1px); }
+  .drilllink:hover .arr { transform: translateX(3px); color: var(--red-hi); }
 
   .stats { position: relative; border-radius: var(--r-lg); padding: 16px;
     background: linear-gradient(155deg, #17171c 0%, #101014 100%);
@@ -91,12 +103,13 @@
   /* Pattern nav */
   .navlist { display: flex; flex-direction: column; gap: 2px; overflow-y: auto; }
   .navitem { display: block; padding: 8px 12px; border-radius: 8px; color: var(--txt-2);
-    font-size: 13px; position: relative; transition: background .16s, color .16s; }
+    font-size: 13px; position: relative; transition: background .16s, color .16s, transform .16s cubic-bezier(.22,1,.36,1); }
   .navitem::before { content: ''; position: absolute; left: 0; top: 20%; bottom: 20%; width: 3px;
     border-radius: 3px; background: var(--red); opacity: 0; transition: opacity .16s; }
-  .navitem:hover { background: var(--bg-hover); color: var(--txt); }
-  .navitem.active { background: linear-gradient(90deg, rgba(229,9,20,.14), rgba(229,9,20,.02)); color: #fff; }
-  .navitem.active::before { opacity: 1; }
+  .navitem:hover { background: var(--bg-hover); color: var(--txt); transform: translateX(3px); }
+  .navitem.active { background: linear-gradient(90deg, rgba(229,9,20,.14), rgba(229,9,20,.02)); color: #fff; transform: translateX(3px); }
+  .navitem.active::before { opacity: 1; box-shadow: 0 0 12px var(--red-glow); }
+  .navitem.active .nm { font-weight: 700; }
   .navitem .row1 { display: flex; align-items: center; gap: 10px; }
   .navitem .ndot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--line-2); transition: all .2s; }
   .navitem.done .ndot { background: var(--green); box-shadow: 0 0 10px var(--green-glow); }
@@ -158,6 +171,13 @@
   .card .ptitle { flex: 1; min-width: 0; }
   .card .ptitle .r1 { display: flex; align-items: center; gap: 10px; }
   .card .ptitle h3 { font-size: 17px; font-weight: 800; letter-spacing: -.3px; }
+  .card .ptitle .crux { display: flex; align-items: baseline; gap: 8px; margin-top: 6px;
+    font-size: 12.5px; color: var(--txt-2); line-height: 1.45; max-width: 70ch; }
+  .card .ptitle .crux-k { flex-shrink: 0; font-size: 8.5px; font-weight: 800; letter-spacing: .8px;
+    color: var(--med); background: rgba(255,176,32,.14); border: 1px solid rgba(255,176,32,.3);
+    padding: 2px 6px; border-radius: 5px; transform: translateY(-1px); }
+  .card.open .ptitle .crux { display: none; }
+  @media (max-width: 720px) { .card .ptitle .crux { -webkit-line-clamp: 2; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden; } .card .ptitle .crux-k { display: none; } }
   .card .ptitle .meta { font-size: 11px; color: var(--txt-3); margin-top: 4px;
     display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
   .card .ptitle .meta .mono { color: var(--txt-2); font-size: 11px; }
@@ -174,7 +194,7 @@
   .card.open .caret { transform: rotate(90deg); color: var(--green); }
 
   .card > .body { display: none; padding: 4px 18px 18px; }
-  .card.open > .body { display: block; animation: fadeUp .3s ease both; }
+  .card.open > .body { display: block; animation: slideDown .32s cubic-bezier(.22,1,.36,1) both; }
 
   /* Template + info */
   .info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 2px 0 16px; }
@@ -282,6 +302,11 @@
       <span class="dot"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
       <div><h1>DSA Mastery</h1><div class="sub">25 patterns · 250 problems</div></div>
     </div>
+    <a class="drilllink" href="google-drill.html">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      <span>Google Drill — rehearsal mode</span>
+      <svg class="arr" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+    </a>
     <div class="stats">
       <div class="grid3">
         <div class="cell solved"><div class="n" id="solvedN">0</div><div class="l">Solved</div></div>
@@ -375,6 +400,7 @@
       <span class="pdotc"></span>
       <span class="ptitle">
         <div class="r1"><h3>${esc(p.name)}</h3><span class="prio ${p.priority}">${p.priority}</span></div>
+        <span class="crux"><span class="crux-k">CRUX</span>${esc(p.coreIdea)}</span>
         <span class="meta">
           <span class="mono">⏱ ${esc(p.time)}</span>
           <span class="mono">◇ ${esc(p.space)}</span>
@@ -383,11 +409,7 @@
       </span>
       <span class="pprog"><span class="pp-lbl">0/${p.problems.length}</span><span class="minibar"><i></i></span></span>
       <span class="caret"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></span>`;
-    head.addEventListener('click', () => {
-      const opening = !card.classList.contains('open');
-      card.classList.toggle('open');
-      navlist.querySelectorAll('.navitem').forEach(n => n.classList.toggle('active', opening && n.dataset.pid === p.id));
-    });
+    head.addEventListener('click', () => card.classList.toggle('open'));
     card.appendChild(head);
 
     const body = el('div', 'body');
@@ -452,6 +474,21 @@
     });
     navlist.appendChild(a);
   });
+
+  // ---- Scroll-spy: highlight the pattern currently in view ----
+  const setActiveNav = pid => {
+    navlist.querySelectorAll('.navitem').forEach(n => {
+      const on = n.dataset.pid === pid;
+      n.classList.toggle('active', on);
+      if (on) n.scrollIntoView({ block: 'nearest' });
+    });
+  };
+  const spy = new IntersectionObserver(entries => {
+    const vis = entries.filter(e => e.isIntersecting)
+      .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+    if (vis) setActiveNav(vis.target.dataset.pid);
+  }, { rootMargin: `-${76}px 0px -60% 0px`, threshold: 0 });
+  cardsWrap.querySelectorAll('.card').forEach(c => spy.observe(c));
 
   // ---- Filter chips: three independent groups (state / difficulty / priority) ----
   function buildGroup(wrapSel, opts, setter) {
@@ -579,7 +616,19 @@
     }
   });
 
+  // ---- Count-up the solved stat on first paint ----
+  function countUp(node, to) {
+    const dur = 600, t0 = performance.now();
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur);
+      node.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));  // easeOutCubic
+      if (k < 1) requestAnimationFrame(step);
+    };
+    if (to > 0) requestAnimationFrame(step);
+  }
+
   refresh();
+  countUp($('#solvedN'), solved.size);
 })();
 </script>
 </body>
